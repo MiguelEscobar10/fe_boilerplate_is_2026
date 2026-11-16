@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 import { requireUser } from "@/lib/dal";
 
@@ -18,6 +19,14 @@ export default async function Home() {
           Entraste como {ROL_LEGIBLE[user.rol]}.
         </p>
       </div>
+      {user.rol === "ARRENDADOR" && (
+        <Link
+          href="/publicaciones/nueva"
+          className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background"
+        >
+          Publicar un equipo o espacio
+        </Link>
+      )}
       <form action={logout}>
         <button
           type="submit"
