@@ -20,22 +20,29 @@ export class ErrorDeApi extends Error {
     readonly status: number,
     /** Mensaje del backend, si mandó uno. */
     readonly detalle?: string,
+    /** `codigo` del cuerpo, si el backend mandó uno (p. ej. VERIFICACION_REQUERIDA). */
+    readonly codigo?: string,
   ) {
     super(detalle ?? `La solicitud respondió ${status}.`);
     this.name = "ErrorDeApi";
   }
 }
 
-async function mensajeDe(res: Response): Promise<string | undefined> {
+async function errorDe(res: Response): Promise<ErrorDeApi> {
   try {
-    const body = (await res.json()) as { message?: string | string[] };
-    return Array.isArray(body.message) ? body.message[0] : body.message;
+    const body = (await res.json()) as {
+      message?: string | string[];
+      codigo?: string;
+    };
+    const mensaje = Array.isArray(body.message) ? body.message[0] : body.message;
+    return new ErrorDeApi(res.status, mensaje, body.codigo);
   } catch {
-    return undefined;
+    return new ErrorDeApi(res.status);
   }
 }
 
-async function pedir<T>(url: string, init: RequestInit = {}): Promise<T> {
+/** Uso interno del módulo de verificación (también lo usa requisito.ts). */
+export async function pedirJson<T>(url: string, init: RequestInit = {}): Promise<T> {
   let res: Response;
   try {
     res = await fetch(url, {
@@ -55,7 +62,7 @@ async function pedir<T>(url: string, init: RequestInit = {}): Promise<T> {
     throw new ErrorDeRed();
   }
   if (!res.ok) {
-    throw new ErrorDeApi(res.status, await mensajeDe(res));
+    throw await errorDe(res);
   }
   return (await res.json()) as T;
 }
@@ -64,7 +71,7 @@ async function pedir<T>(url: string, init: RequestInit = {}): Promise<T> {
 export function enviarDocumento(archivo: File) {
   const datos = new FormData();
   datos.append("documento", archivo);
-  return pedir<VerificacionCreada>("/api/usuarios/me/verificaciones", {
+  return pedirJson<VerificacionCreada>("/api/usuarios/me/verificaciones", {
     method: "POST",
     body: datos,
   });
@@ -73,7 +80,7 @@ export function enviarDocumento(archivo: File) {
 /** La última solicitud propia, o null si todavía no envió ninguna (404). */
 export async function obtenerUltima(): Promise<Verificacion | null> {
   try {
-    return await pedir<Verificacion>("/api/usuarios/me/verificaciones/ultima");
+    return await pedirJson<Verificacion>("/api/usuarios/me/verificaciones/ultima");
   } catch (error) {
     if (error instanceof ErrorDeApi && error.status === 404) return null;
     throw error;
@@ -82,13 +89,13 @@ export async function obtenerUltima(): Promise<Verificacion | null> {
 
 /** Cola del REVISOR (por defecto, las PENDIENTE). */
 export function obtenerCola(estado: EstadoVerificacion = "PENDIENTE") {
-  return pedir<SolicitudEnCola[]>(
+  return pedirJson<SolicitudEnCola[]>(
     `/api/verificaciones?${new URLSearchParams({ estado })}`,
   );
 }
 
 export function decidir(id: string, decision: Decision, motivo?: string) {
-  return pedir<VerificacionCreada>(
+  return pedirJson<VerificacionCreada>(
     `/api/verificaciones/${encodeURIComponent(id)}/decision`,
     {
       method: "PATCH",
