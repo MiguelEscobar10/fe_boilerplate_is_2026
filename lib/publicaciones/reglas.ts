@@ -104,9 +104,21 @@ export function validarPublicacion(d: Datos): ErroresCampos {
 /**
  * Ubica en qué campo va un mensaje 400 del backend (BE-01.1 responde en
  * español, empezando por el campo). Si no se reconoce, va como error general.
+ *
+ * Los mensajes de fotos se revisan primero: incluyen el nombre del archivo
+ * (p. ej. 'La imagen "nombre.jpg" no es JPG ni PNG.'), y ese nombre podría
+ * contener otra palabra clave ("nombre", "tipo"...) y caer en otro campo.
  */
 export function campoDeMensaje(mensaje: string): CampoPublicacion | null {
   const m = mensaje.toLowerCase();
+  if (
+    m.startsWith("la imagen") ||
+    m.includes("fotograf") ||
+    m.includes("jpg ni png") ||
+    m.includes("5 mb")
+  ) {
+    return "imagenes";
+  }
   if (m.includes("tipo")) return "tipo";
   if (m.includes("nombre")) return "nombre";
   if (m.includes("descripción")) return "descripcion";
@@ -115,6 +127,5 @@ export function campoDeMensaje(mensaje: string): CampoPublicacion | null {
   if (m.includes("tarifa")) return "tarifaMonto";
   if (m.includes("depósito")) return "depositoMonto";
   if (m.includes("condiciones")) return "condiciones";
-  if (m.includes("imagen") || m.includes("fotograf")) return "imagenes";
   return null;
 }
