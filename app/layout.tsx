@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Encabezado } from "@/components/encabezado";
+import { getSession } from "@/lib/session";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,13 +19,19 @@ export const metadata: Metadata = {
   description: "Boilerplate con login básico",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Mismo chequeo optimista que proxy.ts: hay cookie de sesión.
+  const session = await getSession();
+
   return (
     <html
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {session && <Encabezado />}
+        {children}
+      </body>
     </html>
   );
 }
