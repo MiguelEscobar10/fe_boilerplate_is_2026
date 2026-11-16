@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { BandejaNotificaciones } from "../bandeja-notificaciones";
@@ -138,6 +138,85 @@ describe("BandejaNotificaciones", () => {
     expect(api.llamadasLista()[1].get("page")).toBe("2");
     expect(screen.getAllByRole("listitem")).toHaveLength(21);
     expect(screen.queryByRole("button", { name: "Cargar más" })).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Backend en memoria que pagina como el real (offset = (page - 1) * limit
+ * sobre el estado actual), para probar que «Cargar más» no se salta items
+ * cuando algo sale del filtro.
+ */
+function backendEnMemoria(cantidad: number) {
+  const datos = Array.from({ length: cantidad }, (_, i) =>
+    crearNotificacion({ titulo: `Item ${i + 1}` }),
+  );
+  const visibles = (soloNoLeidas: boolean) =>
+    datos.filter((n) => !soloNoLeidas || n.leidaAt === null);
+  return {
+    datos,
+    lista: (q: URLSearchParams) => {
+      const filtradas = visibles(q.get("soloNoLeidas") === "true");
+      const limit = Number(q.get("limit"));
+      const offset = (Number(q.get("page")) - 1) * limit;
+      return json(bandeja(filtradas.slice(offset, offset + limit), filtradas.length));
+    },
+    marcar: (id: string) => {
+      const n = datos.find((d) => d.id === id);
+      if (!n) return json({ statusCode: 404, message: "La notificación no existe." }, 404);
+      n.leidaAt = "2026-11-15T12:00:00.000Z";
+      return json(n);
+    },
+    borrar: (titulo: string) => {
+      datos.splice(datos.findIndex((d) => d.titulo === titulo), 1);
+    },
+  };
+}
+
+describe("«Cargar más» después de que un item sale del filtro", () => {
+  it("no se salta ninguna tras quitar una caducada (404)", async () => {
+    const user = userEvent.setup();
+    const backend = backendEnMemoria(23);
+    simularApi({ lista: backend.lista, marcar: backend.marcar });
+    renderBandeja();
+    await screen.findByText("Item 1");
+
+    backend.borrar("Item 5");
+    await user.click(within(itemDe("Item 5")).getByRole("button", { name: "Marcar como leída" }));
+    await screen.findByText("Esa notificación ya no está disponible y se quitó de la lista.");
+
+    while (screen.queryByRole("button", { name: "Cargar más" })) {
+      await user.click(screen.getByRole("button", { name: "Cargar más" }));
+      await waitFor(() =>
+        expect(screen.queryByRole("button", { name: "Cargando..." })).not.toBeInTheDocument(),
+      );
+    }
+
+    const titulos = screen
+      .getAllByRole("listitem")
+      .map((li) => within(li).getByText(/^Item \d+$/).textContent);
+    expect(titulos).toEqual(backend.datos.map((n) => n.titulo));
+    expect(titulos).toHaveLength(22);
+  });
+
+  it("no se salta ninguna tras marcar una como leída en «No leídas»", async () => {
+    const user = userEvent.setup();
+    const backend = backendEnMemoria(21);
+    simularApi({ lista: backend.lista, marcar: backend.marcar });
+    renderBandeja();
+    await user.click(await screen.findByRole("button", { name: "No leídas" }));
+    await screen.findByText("Item 1");
+
+    await user.click(within(itemDe("Item 3")).getByRole("button", { name: "Marcar como leída" }));
+    await within(itemDe("Item 3")).findByText("Leída");
+    await user.click(screen.getByRole("button", { name: "Cargar más" }));
+
+    expect(await screen.findByText("Item 21")).toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")).toHaveLength(21);
+    // La marcada sigue a la vista, como leída.
+    expect(itemDe("Item 3")).toHaveAttribute("data-estado", "leida");
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: /Cargar más|Cargando/ })).not.toBeInTheDocument(),
+    );
   });
 });
 

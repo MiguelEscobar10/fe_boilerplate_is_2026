@@ -33,8 +33,14 @@ export function BandejaNotificaciones({ id, onActualizar, onMarcada, onCaducada 
   // Cambia para volver a pedir la primera página con el mismo filtro.
   const [recarga, setRecarga] = useState(0);
   const [items, setItems] = useState<Notificacion[]>([]);
+  // Total del backend con el filtro aplicado, ajustado con lo que sale del
+  // filtro desde la última respuesta.
   const [total, setTotal] = useState(0);
-  const [pagina, setPagina] = useState(1);
+  // Posición, en el estado actual del backend, de la primera notificación que
+  // todavía no se cargó. La API pagina por número de página: si un item sale
+  // del filtro (caducó, o se marcó leída en «No leídas»), las páginas se
+  // corren uno y pedir `page + 1` se saltaría una notificación.
+  const [siguiente, setSiguiente] = useState(0);
   const [cargando, setCargando] = useState(true);
   const [cargandoMas, setCargandoMas] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +58,7 @@ export function BandejaNotificaciones({ id, onActualizar, onMarcada, onCaducada 
       .then((bandeja) => {
         setItems(bandeja.items);
         setTotal(bandeja.total);
-        setPagina(1);
+        setSiguiente(bandeja.items.length);
         setError(null);
         setCargando(false);
       })
@@ -93,10 +99,12 @@ export function BandejaNotificaciones({ id, onActualizar, onMarcada, onCaducada 
     setCargandoMas(true);
     setErrorMas(null);
     try {
-      const siguiente = pagina + 1;
+      // La página que contiene la siguiente posición. Si no está alineada, la
+      // página repite algunas ya cargadas, que se descartan por id.
+      const page = Math.floor(siguiente / LIMITE_PAGINA) + 1;
       const bandeja = await obtenerBandeja({
         soloNoLeidas: filtro === "no-leidas",
-        page: siguiente,
+        page,
         limit: LIMITE_PAGINA,
       });
       setItems((actuales) => {
@@ -104,7 +112,7 @@ export function BandejaNotificaciones({ id, onActualizar, onMarcada, onCaducada 
         return [...actuales, ...bandeja.items.filter((n) => !ids.has(n.id))];
       });
       setTotal(bandeja.total);
-      setPagina(siguiente);
+      setSiguiente((page - 1) * LIMITE_PAGINA + bandeja.items.length);
     } catch (e) {
       if (e instanceof SesionExpiradaError) return;
       setErrorMas(mensajeDeError(e));
@@ -117,6 +125,12 @@ export function BandejaNotificaciones({ id, onActualizar, onMarcada, onCaducada 
     setItems((actuales) =>
       actuales.map((n) => (n.id === actualizada.id ? actualizada : n)),
     );
+    if (filtro === "no-leidas") {
+      // Ya no cumple el filtro en el backend: se queda a la vista como leída,
+      // pero las posiciones de las siguientes bajan en uno.
+      setSiguiente((p) => Math.max(0, p - 1));
+      setTotal((t) => Math.max(0, t - 1));
+    }
     setAviso(null);
     onMarcada();
   }
@@ -124,11 +138,12 @@ export function BandejaNotificaciones({ id, onActualizar, onMarcada, onCaducada 
   function caducada(idCaducada: string) {
     setItems((actuales) => actuales.filter((n) => n.id !== idCaducada));
     setTotal((t) => Math.max(0, t - 1));
+    setSiguiente((p) => Math.max(0, p - 1));
     setAviso("Esa notificación ya no está disponible y se quitó de la lista.");
     onCaducada();
   }
 
-  const hayMas = !cargando && !error && items.length < total;
+  const hayMas = !cargando && !error && siguiente < total;
 
   return (
     <section
