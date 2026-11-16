@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { logout } from "@/app/actions/auth";
 import { requireUser } from "@/lib/dal";
 
 const ROL_LEGIBLE = {
@@ -8,6 +7,7 @@ const ROL_LEGIBLE = {
   REVISOR: "revisor",
 } as const;
 
+// "Cerrar sesión" vive en el encabezado (components/encabezado.tsx).
 export default async function Home() {
   const user = await requireUser();
 
@@ -27,14 +27,6 @@ export default async function Home() {
           Publicar un equipo o espacio
         </Link>
       )}
-      <form action={logout}>
-        <button
-          type="submit"
-          className="rounded-md border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-700"
-        >
-          Cerrar sesión
-        </button>
-      </form>
     </div>
   );
 }

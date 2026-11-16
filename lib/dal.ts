@@ -37,9 +37,18 @@ export const getCurrentUser = cache(async (): Promise<UsuarioActual | null> => {
   return (await res.json()) as UsuarioActual;
 });
 
-/** Igual que getCurrentUser, pero manda al login si no hay sesión válida. */
+/**
+ * Igual que getCurrentUser, pero sin sesión válida manda al login.
+ *
+ * - Sin cookie: directo a /login.
+ * - Con cookie pero token vencido o inválido: a /api/sesion/expirada, que
+ *   borra la cookie antes de ir a /login (si no, proxy.ts rebotaría a / y se
+ *   formaría un bucle de redirecciones).
+ */
 export async function requireUser(): Promise<UsuarioActual> {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  return user;
+  if (user) return user;
+
+  const token = await getSession();
+  redirect(token ? "/api/sesion/expirada" : "/login");
 }

@@ -9,7 +9,7 @@
 | `/login` | Sí | Inicio de sesión (ya venía en el boilerplate). Ahora enlaza a los dos registros. |
 | `/registro/arrendador` | Sí | Crea una cuenta de arrendador. |
 | `/registro/arrendatario` | Sí | Crea una cuenta de arrendatario. |
-| `/` | No | Saluda con el nombre y el rol que devuelve el backend. |
+| `/` | No | Saluda con el nombre y el rol que devuelve el backend. "Cerrar sesión" está en el encabezado. |
 
 Las dos pantallas de registro usan el mismo formulario
 (`app/registro/register-form.tsx`) con el rol fijo, y la misma Server Action
@@ -35,6 +35,13 @@ mensaje de validación (por ejemplo `ROL_NO_PERMITIDO`).
   otra cookie que el usuario pueda editar.
 - `proxy.ts` hace el chequeo rápido (¿hay cookie?) y deja pasar sin sesión solo
   `/login` y los dos registros.
+- **Sesión vencida.** El JWT dura 15 minutos y la cookie 7 días. Si la cookie
+  sigue pero `/auth/me` responde 401, `requireUser()` manda a
+  `/api/sesion/expirada`, que borra la cookie y recién entonces va a `/login`.
+  Sin ese paso, `proxy.ts` vería la cookie en `/login` y devolvería a `/`, y el
+  navegador entraría en un bucle de redirecciones. Ese route handler vive bajo
+  `/api` para que el proxy no lo intercepte (un Server Component no puede
+  borrar cookies).
 
 ### Ruta protegida por rol
 
