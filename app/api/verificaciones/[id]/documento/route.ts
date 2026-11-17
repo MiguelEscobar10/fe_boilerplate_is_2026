@@ -60,6 +60,8 @@ export async function GET(
       "Content-Type": res.headers.get("Content-Type") ?? "application/octet-stream",
       "Content-Disposition": "inline",
       "Cache-Control": "private, no-store",
+      // El tipo lo decide el backend: que el navegador no adivine otro.
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }

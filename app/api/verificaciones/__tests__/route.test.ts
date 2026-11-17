@@ -123,6 +123,7 @@ describe("route handlers de verificación", () => {
       expect(res.status).toBe(200);
       expect(res.headers.get("Content-Type")).toBe("application/pdf");
       expect(res.headers.get("Cache-Control")).toBe("private, no-store");
+      expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
       expect(new Uint8Array(await res.arrayBuffer())).toEqual(bytes);
     });
 
