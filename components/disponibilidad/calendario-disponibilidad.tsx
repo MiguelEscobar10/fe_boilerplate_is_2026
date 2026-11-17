@@ -16,16 +16,10 @@ import {
   sumarMeses,
 } from "@/lib/disponibilidad/fechas";
 import type { PeriodoOcupado } from "@/lib/disponibilidad/tipos";
+import { ESTILO_DIA, LeyendaDisponibilidad } from "./leyenda-disponibilidad";
 
 const DIAS_SEMANA = ["L", "M", "X", "J", "V", "S", "D"];
 
-const ESTILO: Record<EstadoDia, string> = {
-  libre: "bg-background hover:bg-zinc-100 dark:hover:bg-zinc-900",
-  reserva:
-    "bg-[repeating-linear-gradient(45deg,var(--color-zinc-200)_0_4px,transparent_4px_8px)] dark:bg-[repeating-linear-gradient(45deg,var(--color-zinc-700)_0_4px,transparent_4px_8px)] font-semibold",
-  bloqueo: "bg-foreground text-background font-semibold",
-  pasado: "text-zinc-400 dark:text-zinc-600",
-};
 
 const ETIQUETA: Record<EstadoDia, string> = {
   libre: "libre",
@@ -42,6 +36,12 @@ type Props = {
   seleccion?: { desde: string | null; hasta: string | null };
   /** Si viene, los días que no pasaron se pueden pulsar. */
   onElegirDia?: (dia: string) => void;
+  /**
+   * Si viene, pulsar un día pasado u ocupado no lo elige: avisa por aquí, para
+   * que la pantalla explique por qué (H13, criterio 3). Sin esta prop los días
+   * pasados quedan deshabilitados y los ocupados se pueden elegir.
+   */
+  onDiaNoDisponible?: (dia: string, estado: EstadoDia) => void;
 };
 
 /**
@@ -54,6 +54,7 @@ export function CalendarioDisponibilidad({
   recarga = 0,
   seleccion,
   onElegirDia,
+  onDiaNoDisponible,
 }: Props) {
   const hoy = hoyLocal();
   const [mes, setMes] = useState(hoy.slice(0, 7));
@@ -162,10 +163,21 @@ export function CalendarioDisponibilidad({
                         data-estado={celda.estado}
                         aria-pressed={onElegirDia ? elegido(celda.dia) : undefined}
                         aria-label={`${formatearDiaCorto(celda.dia)}, ${ETIQUETA[celda.estado]}`}
-                        disabled={!onElegirDia || celda.estado === "pasado"}
-                        onClick={() => onElegirDia?.(celda.dia)}
+                        disabled={
+                          !onElegirDia || (celda.estado === "pasado" && !onDiaNoDisponible)
+                        }
+                        aria-disabled={
+                          onDiaNoDisponible && celda.estado !== "libre" ? true : undefined
+                        }
+                        onClick={() => {
+                          if (onDiaNoDisponible && celda.estado !== "libre") {
+                            onDiaNoDisponible(celda.dia, celda.estado);
+                          } else {
+                            onElegirDia?.(celda.dia);
+                          }
+                        }}
                         className={`h-9 w-full rounded border border-zinc-200 tabular-nums disabled:cursor-default dark:border-zinc-800 ${
-                          ESTILO[celda.estado]
+                          ESTILO_DIA[celda.estado]
                         } ${elegido(celda.dia) ? "outline outline-2 -outline-offset-2 outline-sky-600" : ""}`}
                       >
                         {celda.numero}
@@ -179,20 +191,7 @@ export function CalendarioDisponibilidad({
         </table>
       )}
 
-      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-600 dark:text-zinc-400">
-        <li className="flex items-center gap-1">
-          <span className={`inline-block size-3 rounded border border-zinc-300 dark:border-zinc-700 ${ESTILO.libre}`} /> Libre
-        </li>
-        <li className="flex items-center gap-1">
-          <span className={`inline-block size-3 rounded border border-zinc-300 dark:border-zinc-700 ${ESTILO.reserva}`} /> Ocupado (reserva CONFIRMADA o EN_CURSO)
-        </li>
-        <li className="flex items-center gap-1">
-          <span className={`inline-block size-3 rounded ${ESTILO.bloqueo}`} /> Bloqueado por el arrendador
-        </li>
-        <li className="flex items-center gap-1">
-          <span className="inline-block size-3 rounded border border-zinc-300 text-[8px] leading-3 text-zinc-400 dark:border-zinc-700">·</span> Pasado (no se puede elegir)
-        </li>
-      </ul>
+      <LeyendaDisponibilidad />
     </section>
   );
 }
