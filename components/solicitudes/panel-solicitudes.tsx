@@ -15,6 +15,10 @@ import {
   type EstadoReserva,
   type Solicitud,
 } from "@/lib/solicitudes/tipos";
+import {
+  FormularioCalificacionArrendatario,
+  type ResultadoCalificacion,
+} from "@/components/calificaciones/formulario-calificacion-arrendatario";
 import { DetalleSolicitud } from "./detalle-solicitud";
 import { TablaSolicitudes } from "./tabla-solicitudes";
 
@@ -33,7 +37,8 @@ function actualizarUrl(estado: EstadoReserva | null, page: number) {
   window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
 }
 
-type Abierta = { id: string; decision?: Decision };
+/** La solicitud abierta y qué se muestra: el detalle o la calificación. */
+type Abierta = { id: string; decision?: Decision; calificar?: boolean };
 
 type Props = {
   estadoInicial?: EstadoReserva | null;
@@ -116,6 +121,18 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
     );
   }
 
+  // H18: tras calificar (o si el 409 dice que ya estaba) la acción deja de
+  // estar disponible en esa fila. Con un 422 o 404 se recarga la lista.
+  function calificada(id: string, resultado: ResultadoCalificacion) {
+    if (resultado === "desactualizada") {
+      recargar();
+      return;
+    }
+    setItems((actuales) =>
+      actuales.map((s) => (s.id === id ? { ...s, arrendatarioCalificado: true } : s)),
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -177,6 +194,7 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
             solicitudes={items}
             seleccionadaId={abierta?.id ?? null}
             onAbrir={(s, decision) => setAbierta({ id: s.id, decision })}
+            onCalificar={(s) => setAbierta({ id: s.id, calificar: true })}
           />
           {paginas > 1 && (
             <nav aria-label="Paginación" className="flex items-center justify-center gap-3 text-sm">
@@ -204,7 +222,16 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
         </>
       )}
 
-      {solicitudAbierta && abierta && (
+      {solicitudAbierta && abierta?.calificar && (
+        <FormularioCalificacionArrendatario
+          key={`calificar-${abierta.id}`}
+          reserva={solicitudAbierta}
+          onTerminado={(resultado) => calificada(abierta.id, resultado)}
+          onCerrar={() => setAbierta(null)}
+        />
+      )}
+
+      {solicitudAbierta && abierta && !abierta.calificar && (
         <DetalleSolicitud
           // Otra solicitud o la misma con otra acción: el detalle empieza de cero.
           key={`${abierta.id}-${abierta.decision ?? "ver"}`}
