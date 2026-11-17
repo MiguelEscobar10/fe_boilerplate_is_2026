@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { RutaProtegida } from "@/components/ruta-protegida";
 import { PantallaEntrega } from "@/components/entregas/pantalla-entrega";
 
 export const metadata: Metadata = { title: "Entrega de la reserva" };
@@ -12,9 +13,11 @@ export default async function EntregaPage({
   const { id } = await params;
   const { tipo } = await searchParams;
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-8">
-      <h1 className="text-2xl font-semibold">Entrega de la reserva</h1>
-      <PantallaEntrega reservaId={id} tipoBien={tipo === "ESPACIO" ? "ESPACIO" : "EQUIPO"} />
-    </main>
+    <RutaProtegida roles={["ARRENDADOR", "ARRENDATARIO"]}>
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-8">
+        <h1 className="text-2xl font-semibold">Entrega de la reserva</h1>
+        <PantallaEntrega reservaId={id} tipoBien={tipo === "ESPACIO" ? "ESPACIO" : "EQUIPO"} />
+      </main>
+    </RutaProtegida>
   );
 }
