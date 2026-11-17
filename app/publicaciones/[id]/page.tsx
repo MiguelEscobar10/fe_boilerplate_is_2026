@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CalendarioDisponibilidad } from "@/components/disponibilidad/calendario-disponibilidad";
+import { SelectorDisponibilidad } from "@/components/disponibilidad/selector-disponibilidad";
 import { DetallePublicacion } from "@/components/publicaciones/detalle-publicacion";
 import { getCurrentUser } from "@/lib/dal";
 import { obtenerPublicacion } from "@/lib/publicaciones/api";
@@ -28,6 +30,21 @@ export default async function PublicacionPage(props: PageProps<"/publicaciones/[
           </p>
         )}
         <DetallePublicacion publicacion={publicacion} />
+        <section aria-labelledby="titulo-disponibilidad" className="mt-8 flex max-w-sm flex-col gap-2">
+          <h2 id="titulo-disponibilidad" className="text-lg font-semibold">
+            Disponibilidad
+          </h2>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Los días con solicitudes pendientes se ven libres: una solicitud no aparta fechas
+            hasta que el arrendador la aprueba.
+          </p>
+          {/* Quien puede reservar elige un período; el resto solo lo ve. */}
+          {usuario?.rol === "ARRENDATARIO" ? (
+            <SelectorDisponibilidad publicacionId={publicacion.id} />
+          ) : (
+            <CalendarioDisponibilidad publicacionId={publicacion.id} />
+          )}
+        </section>
         {esDueno && (
           <Link
             href={`/arrendador/publicaciones/${publicacion.id}/bloqueos`}
