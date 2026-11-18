@@ -158,6 +158,21 @@ describe("BotonPreguntarArrendador (FE-15.1)", () => {
     expect(screen.getByText("1001/1000")).toBeInTheDocument();
   });
 
+  it("con 600 emojis Enviar sigue habilitado y el contador marca 600", async () => {
+    simularApi({ abrir: () => json({ id: CONVERSACION }, 201) });
+    const usuario = userEvent.setup();
+    boton();
+
+    await usuario.click(
+      screen.getByRole("button", { name: "Contactar al arrendador" }),
+    );
+    await usuario.click(await screen.findByLabelText("Mensaje"));
+    await usuario.paste("😀".repeat(600));
+
+    expect(screen.getByText("600/1000")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Enviar" })).toBeEnabled();
+  });
+
   it("un 404 se muestra como «Conversación no disponible»", async () => {
     simularApi({
       abrir: () =>

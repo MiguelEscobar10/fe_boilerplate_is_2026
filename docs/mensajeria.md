@@ -15,6 +15,8 @@ ve un ARRENDATARIO que no es el dueño.
   FE-16.1.
 - "Enviar" queda deshabilitado con el mensaje vacío o de más de 1000
   caracteres y durante el envío.
+- Los caracteres se cuentan como el backend: un emoji vale 1 (no 2, como en
+  `String.length`). Lo encontró Miguel en la revisión de QA-15.1.
 - Un 404 (publicación inactiva o que ya no existe) se ve como "Conversación no
   disponible". Un error de red deja "Reintentar", tanto al abrir como al
   cargar el historial.
