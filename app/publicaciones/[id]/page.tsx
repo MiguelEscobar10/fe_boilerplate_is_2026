@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DetallePublicacion } from "@/components/publicaciones/detalle-publicacion";
+import { getCurrentUser } from "@/lib/dal";
 import { obtenerPublicacion } from "@/lib/publicaciones/api";
 
 export const metadata: Metadata = {
@@ -11,8 +12,9 @@ export const metadata: Metadata = {
 export default async function PublicacionPage(props: PageProps<"/publicaciones/[id]">) {
   const { id } = await props.params;
   const { nueva } = await props.searchParams;
-  const publicacion = await obtenerPublicacion(id);
+  const [publicacion, usuario] = await Promise.all([obtenerPublicacion(id), getCurrentUser()]);
   if (!publicacion) notFound();
+  const esDueno = usuario?.id === publicacion.arrendadorId;
 
   return (
     <div className="flex flex-1 justify-center px-4 py-8">
@@ -26,6 +28,14 @@ export default async function PublicacionPage(props: PageProps<"/publicaciones/[
           </p>
         )}
         <DetallePublicacion publicacion={publicacion} />
+        {esDueno && (
+          <Link
+            href={`/arrendador/publicaciones/${publicacion.id}/bloqueos`}
+            className="mt-6 inline-block rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium dark:border-zinc-700"
+          >
+            Bloquear fechas
+          </Link>
+        )}
         <Link href="/" className="mt-8 inline-block text-sm underline">
           Volver al inicio
         </Link>
