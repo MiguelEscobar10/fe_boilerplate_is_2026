@@ -60,8 +60,21 @@ export function ConversacionChat({
       const ultima = Math.max(1, Math.ceil(primera.total / POR_PAGINA));
       const pagina =
         ultima === 1 ? primera : await obtenerMensajes(conversacionId, ultima);
+      let mensajes = pagina.items;
+      let desde = ultima;
+      // El backend pagina del más viejo al más nuevo: si la última página viene
+      // corta (61 mensajes → la página 2 trae 11), se suma la anterior para que
+      // al abrir siempre se vean al menos POR_PAGINA mensajes.
+      if (ultima > 1 && mensajes.length < POR_PAGINA) {
+        const anterior =
+          ultima - 1 === 1
+            ? primera
+            : await obtenerMensajes(conversacionId, ultima - 1);
+        mensajes = [...anterior.items, ...mensajes];
+        desde = ultima - 1;
+      }
       if (vigente) {
-        setHistorial({ mensajes: pagina.items, primeraPagina: ultima });
+        setHistorial({ mensajes, primeraPagina: desde });
         setError(null);
       }
     })().catch((e: unknown) => {

@@ -316,12 +316,12 @@ describe("ConversacionReserva (FE-16.1)", () => {
   });
 
   it("abre en los mensajes más recientes y carga los anteriores a pedido", async () => {
-    const todos = Array.from({ length: 60 }, (_, i) => mensaje(i + 1));
+    const todos = Array.from({ length: 100 }, (_, i) => mensaje(i + 1));
     simularApi({ abrir: abierta("CONFIRMADA", true), mensajes: todos });
     const usuario = userEvent.setup();
     pantalla();
 
-    expect(await screen.findByText("Mensaje 60")).toBeInTheDocument();
+    expect(await screen.findByText("Mensaje 100")).toBeInTheDocument();
     expect(screen.getByText("Mensaje 51")).toBeInTheDocument();
     expect(screen.queryByText("Mensaje 50")).not.toBeInTheDocument();
 
@@ -334,7 +334,33 @@ describe("ConversacionReserva (FE-16.1)", () => {
       .getAllByText(/^Mensaje \d+$/)
       .map((n) => n.textContent);
     expect(textos[0]).toBe("Mensaje 1");
-    expect(textos.at(-1)).toBe("Mensaje 60");
+    expect(textos.at(-1)).toBe("Mensaje 100");
+    expect(
+      screen.queryByRole("button", { name: "Ver mensajes anteriores" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("si la última página viene corta, también muestra la anterior", async () => {
+    const todos = Array.from({ length: 111 }, (_, i) => mensaje(i + 1));
+    simularApi({ abrir: abierta("CONFIRMADA", true), mensajes: todos });
+    pantalla();
+
+    // 111 mensajes: la página 3 trae solo del 101 al 111, así que se suma la 2.
+    expect(await screen.findByText("Mensaje 111")).toBeInTheDocument();
+    expect(screen.getByText("Mensaje 51")).toBeInTheDocument();
+    expect(screen.queryByText("Mensaje 50")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Ver mensajes anteriores" }),
+    ).toBeInTheDocument();
+  });
+
+  it("con 61 mensajes abre mostrando todos", async () => {
+    const todos = Array.from({ length: 61 }, (_, i) => mensaje(i + 1));
+    simularApi({ abrir: abierta("CONFIRMADA", true), mensajes: todos });
+    pantalla();
+
+    expect(await screen.findByText("Mensaje 61")).toBeInTheDocument();
+    expect(screen.getByText("Mensaje 1")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Ver mensajes anteriores" }),
     ).not.toBeInTheDocument();

@@ -69,7 +69,8 @@ cierra mientras la pantalla está abierta, el siguiente envío recibe 409
 - `components/mensajeria/conversacion-reserva.tsx`: `ConversacionReserva`,
   abre la conversación y elige qué mostrar.
 - `components/mensajeria/conversacion-chat.tsx`: `ConversacionChat`, historial
-  y caja. Abre en los mensajes más recientes y carga los anteriores con "Ver
+  y caja. Abre en los mensajes más recientes (si la última página viene
+  corta, suma la anterior para mostrar al menos 50) y carga los anteriores con "Ver
   mensajes anteriores"; "Actualizar" trae los nuevos.
 - `components/mensajeria/caja-mensaje.tsx`: `CajaMensaje`, de 1 a 1000
   caracteres (sin contar los espacios de los extremos) con contador. "Enviar"
@@ -103,7 +104,7 @@ reutiliza para la conversación previa.
   (CONFIRMADA, EN_CURSO, RECHAZADA, CANCELADA, COMPLETADA, PENDIENTE, cerrada
   sin conversación, ajena), sin conexión, enviar y limpiar, Enviar deshabilitado
   con vacío y 1001 caracteres (y habilitado con 1000), reintentar tras un fallo de red, doble clic, cierre mientras está abierta, fallo que conserva el
-  texto, paginación de 60 mensajes, historial vacío, nombres según el rol y
+  texto, paginación de 100 mensajes, última página corta (111 y 61 mensajes), historial vacío, nombres según el rol y
   "Actualizar".
 - `app/api/conversaciones/__tests__/route.test.ts`: lo que reenvía cada route
   handler, el 409 tal cual, cuerpo inválido y sin sesión.
