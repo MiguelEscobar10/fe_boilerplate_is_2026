@@ -163,8 +163,12 @@ export function CalendarioDisponibilidad({
                         data-estado={celda.estado}
                         aria-pressed={onElegirDia ? elegido(celda.dia) : undefined}
                         aria-label={`${formatearDiaCorto(celda.dia)}, ${ETIQUETA[celda.estado]}`}
+                        // Mientras carga, el estado del día todavía no es el real:
+                        // no se deja pulsar para no elegir un día que resulte ocupado.
                         disabled={
-                          !onElegirDia || (celda.estado === "pasado" && !onDiaNoDisponible)
+                          cargando ||
+                          !onElegirDia ||
+                          (celda.estado === "pasado" && !onDiaNoDisponible)
                         }
                         aria-disabled={
                           onDiaNoDisponible && celda.estado !== "libre" ? true : undefined

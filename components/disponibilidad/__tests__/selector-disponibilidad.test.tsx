@@ -193,6 +193,20 @@ describe("SelectorDisponibilidad", () => {
 });
 
 describe("CalendarioDisponibilidad: estados", () => {
+  it("mientras carga no deja pulsar los días", async () => {
+    let responder: (r: Response) => void = () => {};
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise<Response>((r) => (responder = r))),
+    );
+
+    render(<SelectorDisponibilidad publicacionId={ID} />);
+
+    expect(dia("21 nov 2026")).toBeDisabled();
+    responder(json({ publicacionId: ID, desde: "", hasta: "", ocupados: [] }));
+    await waitFor(() => expect(dia("21 nov 2026")).toBeEnabled());
+  });
+
   it("cargando y error con reintento", async () => {
     const user = userEvent.setup();
     let llamadas = 0;
