@@ -29,8 +29,9 @@ type Props = {
 };
 
 /**
- * Caja para escribir (H15 y H16): de 1 a 1000 caracteres con contador, no
- * deja mandar dos veces el mismo envío y mantiene el texto si falla.
+ * Caja para escribir (H15 y H16): de 1 a 1000 caracteres con contador.
+ * "Enviar" queda deshabilitado con el texto vacío o de más y durante el
+ * envío, no manda dos veces el mismo envío y mantiene el texto si falla.
  */
 export function CajaMensaje({
   conversacionId,
@@ -90,6 +91,9 @@ export function CajaMensaje({
   }
 
   const largo = texto.trim().length;
+  // Enviar queda deshabilitado con el texto vacío o de más (FE-15.1) y durante el envío.
+  const invalido = validarMensaje(texto) !== null;
+  const excedido = largo > MAX_CARACTERES;
 
   return (
     <form onSubmit={enviar} className="flex flex-col gap-2" noValidate>
@@ -105,7 +109,7 @@ export function CajaMensaje({
         }}
         rows={3}
         aria-describedby={idAyuda}
-        aria-invalid={error ? true : undefined}
+        aria-invalid={error || excedido ? true : undefined}
         disabled={enviando}
         className="w-full rounded-md border border-zinc-300 bg-background px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-700"
       />
@@ -118,12 +122,17 @@ export function CajaMensaje({
         </p>
         <button
           type="submit"
-          disabled={enviando}
+          disabled={enviando || invalido}
           className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
         >
           {enviando ? "Enviando..." : "Enviar"}
         </button>
       </div>
+      {excedido && !error && (
+        <p role="alert" className="text-sm text-red-700 dark:text-red-400">
+          El mensaje no puede pasar de {MAX_CARACTERES} caracteres.
+        </p>
+      )}
       {error && (
         <p role="alert" className="text-sm text-red-700 dark:text-red-400">
           {error}

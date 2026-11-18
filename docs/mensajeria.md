@@ -12,13 +12,13 @@ esta ruta sirve como enlace directo.
 
 ### Qué se ve en cada estado de la reserva
 
-| Estado | Qué muestra |
-|---|---|
-| `CONFIRMADA`, `EN_CURSO` | Historial y caja para escribir |
-| `RECHAZADA`, `CANCELADA`, `COMPLETADA` con mensajes | Historial y "Conversación cerrada. Puedes leer el historial, pero ya no se pueden enviar mensajes." Sin caja |
-| `RECHAZADA`, `CANCELADA`, `COMPLETADA` sin conversación | "Conversación cerrada. Esta reserva no tuvo mensajes." |
-| `PENDIENTE` | "La conversación se habilita cuando la reserva esté CONFIRMADA." |
-| Reserva ajena o que no existe | "Reserva no encontrada." |
+| Estado                                                  | Qué muestra                                                                                                  |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `CONFIRMADA`, `EN_CURSO`                                | Historial y caja para escribir                                                                               |
+| `RECHAZADA`, `CANCELADA`, `COMPLETADA` con mensajes     | Historial y "Conversación cerrada. Puedes leer el historial, pero ya no se pueden enviar mensajes." Sin caja |
+| `RECHAZADA`, `CANCELADA`, `COMPLETADA` sin conversación | "Conversación cerrada. Esta reserva no tuvo mensajes."                                                       |
+| `PENDIENTE`                                             | "La conversación se habilita cuando la reserva esté CONFIRMADA."                                             |
+| Reserva ajena o que no existe                           | "Reserva no encontrada."                                                                                     |
 
 El navegador no decide el estado: lo dice el backend al abrir la conversación
 (`POST /reservas/{id}/conversacion` responde `puedeEscribir`, o 409 con
@@ -34,8 +34,10 @@ cierra mientras la pantalla está abierta, el siguiente envío recibe 409
   y caja. Abre en los mensajes más recientes y carga los anteriores con "Ver
   mensajes anteriores"; "Actualizar" trae los nuevos.
 - `components/mensajeria/caja-mensaje.tsx`: `CajaMensaje`, de 1 a 1000
-  caracteres (sin contar los espacios de los extremos) con contador. No manda
+  caracteres (sin contar los espacios de los extremos) con contador. "Enviar"
+  queda deshabilitado con el texto vacío o de más y durante el envío; no manda
   dos veces el mismo envío y mantiene el texto si falla.
+- Si el historial no carga por red, sale "Reintentar".
 
 `ConversacionChat` y `CajaMensaje` no saben nada de reservas: FE-15.1 los
 reutiliza para la conversación previa.
@@ -61,8 +63,8 @@ reutiliza para la conversación previa.
 
 - `components/mensajeria/__tests__/conversacion-reserva.test.tsx`: cada estado
   (CONFIRMADA, EN_CURSO, RECHAZADA, CANCELADA, COMPLETADA, PENDIENTE, cerrada
-  sin conversación, ajena), sin conexión, enviar y limpiar, vacío y 1001
-  caracteres, doble clic, cierre mientras está abierta, fallo que conserva el
+  sin conversación, ajena), sin conexión, enviar y limpiar, Enviar deshabilitado
+  con vacío y 1001 caracteres (y habilitado con 1000), reintentar tras un fallo de red, doble clic, cierre mientras está abierta, fallo que conserva el
   texto, paginación de 60 mensajes, historial vacío, nombres según el rol y
   "Actualizar".
 - `app/api/conversaciones/__tests__/route.test.ts`: lo que reenvía cada route

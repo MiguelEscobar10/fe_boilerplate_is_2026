@@ -228,21 +228,29 @@ describe("ConversacionReserva (FE-16.1)", () => {
     expect(caja).toHaveValue("");
   });
 
-  it("no manda un mensaje vacío ni uno de más de 1000 caracteres", async () => {
+  it("deshabilita Enviar con el mensaje vacío o de más de 1000 caracteres", async () => {
     const { posts } = simularApi({ abrir: abierta("CONFIRMADA", true) });
     const usuario = userEvent.setup();
     pantalla();
 
-    await usuario.click(await screen.findByRole("button", { name: "Enviar" }));
-    expect(screen.getByRole("alert")).toHaveTextContent("Escribe un mensaje.");
+    const enviar = await screen.findByRole("button", { name: "Enviar" });
+    expect(enviar).toBeDisabled();
 
+    await usuario.type(screen.getByLabelText("Mensaje"), "   ");
+    expect(enviar).toBeDisabled();
+
+    await usuario.clear(screen.getByLabelText("Mensaje"));
     await usuario.click(screen.getByLabelText("Mensaje"));
     await usuario.paste("a".repeat(1001));
     expect(screen.getByText("1001/1000")).toBeInTheDocument();
-    await usuario.click(screen.getByRole("button", { name: "Enviar" }));
     expect(screen.getByRole("alert")).toHaveTextContent(
       "no puede pasar de 1000",
     );
+    expect(enviar).toBeDisabled();
+
+    await usuario.keyboard("{Backspace}");
+    expect(screen.getByText("1000/1000")).toBeInTheDocument();
+    expect(enviar).toBeEnabled();
 
     expect(posts()).toHaveLength(0);
   });
@@ -376,6 +384,39 @@ describe("validarMensaje", () => {
 });
 
 describe("historial", () => {
+  it("si falla la carga por red deja reintentar", async () => {
+    let falla = true;
+    const fetchMock = vi.fn(
+      async (entrada: RequestInfo | URL, init?: RequestInit) => {
+        const url = new URL(String(entrada), "http://localhost");
+        if (init?.method === "POST") {
+          return json({
+            id: CONVERSACION,
+            estadoReserva: "CONFIRMADA",
+            puedeEscribir: true,
+          });
+        }
+        if (falla) throw new TypeError("Failed to fetch");
+        expect(url.pathname).toBe(
+          `/api/conversaciones/${CONVERSACION}/mensajes`,
+        );
+        return json({ items: [mensaje(1)], page: 1, limit: 50, total: 1 });
+      },
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const usuario = userEvent.setup();
+    pantalla();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /Revisa tu conexión/,
+    );
+    falla = false;
+    await usuario.click(screen.getByRole("button", { name: "Reintentar" }));
+
+    expect(await screen.findByText("Mensaje 1")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("vuelve a pedir los mensajes con «Actualizar»", async () => {
     const { fetchMock } = simularApi({
       abrir: abierta("CONFIRMADA", true),

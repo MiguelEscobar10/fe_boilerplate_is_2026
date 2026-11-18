@@ -106,9 +106,21 @@ export function ConversacionChat({
   return (
     <section aria-label="Conversación" className="flex flex-col gap-4">
       {error && (
-        <p role="alert" className="text-sm text-red-700 dark:text-red-400">
-          {error}
-        </p>
+        <div className="flex items-center gap-3">
+          <p role="alert" className="text-sm text-red-700 dark:text-red-400">
+            {error}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setRecarga((n) => n + 1);
+            }}
+            className="text-sm underline"
+          >
+            Reintentar
+          </button>
+        </div>
       )}
 
       {historial && (
