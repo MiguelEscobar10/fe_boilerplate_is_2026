@@ -59,6 +59,9 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [abierta, setAbierta] = useState<Abierta | null>(null);
+  // Aviso que tiene que seguir a la vista aunque se cierre el formulario
+  // (p. ej. un 422 al calificar: la reserva ya no está en el filtro).
+  const [aviso, setAviso] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -81,6 +84,7 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
   const solicitudAbierta = abierta ? items.find((s) => s.id === abierta.id) : undefined;
 
   function cambiarEstado(valor: string) {
+    setAviso(null);
     const nuevo = valor === "" ? null : (valor as EstadoReserva);
     setCargando(true);
     setError(null);
@@ -91,6 +95,7 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
   }
 
   function irAPagina(nueva: number) {
+    setAviso(null);
     setCargando(true);
     setError(null);
     setAbierta(null);
@@ -123,8 +128,12 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
 
   // H18: tras calificar (o si el 409 dice que ya estaba) la acción deja de
   // estar disponible en esa fila. Con un 422 o 404 se recarga la lista.
-  function calificada(id: string, resultado: ResultadoCalificacion) {
+  function calificada(id: string, resultado: ResultadoCalificacion, mensaje?: string) {
     if (resultado === "desactualizada") {
+      // Al recargar, la reserva puede salir del filtro y el formulario se
+      // cerraría sin que se lea el error: se cierra ya y el aviso queda arriba.
+      setAbierta(null);
+      setAviso(mensaje ?? null);
       recargar();
       return;
     }
@@ -169,6 +178,15 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
         </div>
       </div>
 
+      {aviso && (
+        <p
+          role="alert"
+          className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200"
+        >
+          {aviso}
+        </p>
+      )}
+
       {cargando && items.length === 0 ? (
         <p role="status" className="py-8 text-center text-sm text-zinc-600 dark:text-zinc-400">
           Cargando solicitudes...
@@ -193,8 +211,14 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
           <TablaSolicitudes
             solicitudes={items}
             seleccionadaId={abierta?.id ?? null}
-            onAbrir={(s, decision) => setAbierta({ id: s.id, decision })}
-            onCalificar={(s) => setAbierta({ id: s.id, calificar: true })}
+            onAbrir={(s, decision) => {
+              setAviso(null);
+              setAbierta({ id: s.id, decision });
+            }}
+            onCalificar={(s) => {
+              setAviso(null);
+              setAbierta({ id: s.id, calificar: true });
+            }}
           />
           {paginas > 1 && (
             <nav aria-label="Paginación" className="flex items-center justify-center gap-3 text-sm">
@@ -226,7 +250,7 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
         <FormularioCalificacionArrendatario
           key={`calificar-${abierta.id}`}
           reserva={solicitudAbierta}
-          onTerminado={(resultado) => calificada(abierta.id, resultado)}
+          onTerminado={(resultado, mensaje) => calificada(abierta.id, resultado, mensaje)}
           onCerrar={() => setAbierta(null)}
         />
       )}

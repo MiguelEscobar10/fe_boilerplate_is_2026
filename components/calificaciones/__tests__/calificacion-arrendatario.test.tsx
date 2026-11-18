@@ -234,6 +234,27 @@ describe("Calificar al arrendatario: el formulario", () => {
     expect(await within(filaDe("Ana Pérez")).findByText("EN_CURSO")).toBeInTheDocument();
   });
 
+  it("422 con el filtro COMPLETADA: la reserva sale de la lista y el aviso se sigue viendo", async () => {
+    const user = userEvent.setup();
+    let carga = 0;
+    simularApi({
+      lista: () => json(pagina(++carga === 1 ? [completada()] : [])),
+      calificar: () =>
+        json({ statusCode: 422, codigo: "RESERVA_NO_COMPLETADA", message: "x" }, 422),
+    });
+    render(<PanelSolicitudes estadoInicial="COMPLETADA" />);
+    await abrirFormulario(user);
+    await user.click(within(formulario()).getByRole("radio", { name: "3 estrellas" }));
+
+    await user.click(within(formulario()).getByRole("button", { name: "Enviar calificación" }));
+
+    expect(await screen.findByText("No tienes solicitudes en estado COMPLETADA.")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Solo puedes calificar al arrendatario de una reserva COMPLETADA.",
+    );
+    expect(screen.queryByRole("region", { name: /^Calificar a / })).not.toBeInTheDocument();
+  });
+
   it("400: muestra el mensaje del backend", async () => {
     const user = userEvent.setup();
     simularApi({

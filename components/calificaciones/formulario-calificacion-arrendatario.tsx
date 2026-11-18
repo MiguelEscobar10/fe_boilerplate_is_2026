@@ -38,7 +38,8 @@ function mensajeDeError(e: unknown): string {
 
 type Props = {
   reserva: Solicitud;
-  onTerminado: (resultado: ResultadoCalificacion) => void;
+  /** `mensaje` va con "desactualizada": el panel lo muestra al recargar. */
+  onTerminado: (resultado: ResultadoCalificacion, mensaje?: string) => void;
   onCerrar: () => void;
 };
 
@@ -76,10 +77,11 @@ export function FormularioCalificacionArrendatario({ reserva, onTerminado, onCer
       onTerminado("calificada");
     } catch (e) {
       if (e instanceof SesionExpiradaError) return;
-      setError(mensajeDeError(e));
+      const mensaje = mensajeDeError(e);
+      setError(mensaje);
       if (e instanceof CalificacionRechazadaError) {
         if (e.status === 409) onTerminado("calificada");
-        if (e.status === 422 || e.status === 404) onTerminado("desactualizada");
+        if (e.status === 422 || e.status === 404) onTerminado("desactualizada", mensaje);
       }
     } finally {
       enviandoRef.current = false;
