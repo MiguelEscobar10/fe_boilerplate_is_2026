@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CalendarioDisponibilidad } from "@/components/disponibilidad/calendario-disponibilidad";
+import { SelectorDisponibilidad } from "@/components/disponibilidad/selector-disponibilidad";
 import { BotonPreguntarArrendador } from "@/components/mensajeria/boton-preguntar-arrendador";
 import { DetallePublicacion } from "@/components/publicaciones/detalle-publicacion";
 import { getCurrentUser } from "@/lib/dal";
@@ -10,20 +12,15 @@ export const metadata: Metadata = {
   title: "Publicación",
 };
 
-export default async function PublicacionPage(
-  props: PageProps<"/publicaciones/[id]">,
-) {
+export default async function PublicacionPage(props: PageProps<"/publicaciones/[id]">) {
   const { id } = await props.params;
   const { nueva } = await props.searchParams;
-  const [publicacion, usuario] = await Promise.all([
-    obtenerPublicacion(id),
-    getCurrentUser(),
-  ]);
+  const [publicacion, usuario] = await Promise.all([obtenerPublicacion(id), getCurrentUser()]);
   if (!publicacion) notFound();
+  const esDueno = usuario?.id === publicacion.arrendadorId;
   // FE-15.1: solo un arrendatario que no es el dueño puede preguntar. Botón
   // temporal aquí hasta que exista el detalle completo de FE-12.1.
-  const puedePreguntar =
-    usuario?.rol === "ARRENDATARIO" && usuario.id !== publicacion.arrendadorId;
+  const puedePreguntar = usuario?.rol === "ARRENDATARIO" && !esDueno;
 
   return (
     <div className="flex flex-1 justify-center px-4 py-8">
@@ -37,11 +34,31 @@ export default async function PublicacionPage(
           </p>
         )}
         <DetallePublicacion publicacion={publicacion} />
-        {puedePreguntar && (
-          <BotonPreguntarArrendador
-            publicacionId={publicacion.id}
-            usuarioId={usuario.id}
-          />
+        <section aria-labelledby="titulo-disponibilidad" className="mt-8 flex max-w-sm flex-col gap-2">
+          <h2 id="titulo-disponibilidad" className="text-lg font-semibold">
+            Disponibilidad
+          </h2>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Los días con solicitudes pendientes se ven libres: una solicitud no aparta fechas
+            hasta que el arrendador la aprueba.
+          </p>
+          {/* Quien puede reservar elige un período; el resto solo lo ve. */}
+          {usuario?.rol === "ARRENDATARIO" ? (
+            <SelectorDisponibilidad publicacionId={publicacion.id} />
+          ) : (
+            <CalendarioDisponibilidad publicacionId={publicacion.id} />
+          )}
+        </section>
+        {esDueno && (
+          <Link
+            href={`/arrendador/publicaciones/${publicacion.id}/bloqueos`}
+            className="mt-6 inline-block rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium dark:border-zinc-700"
+          >
+            Bloquear fechas
+          </Link>
+        )}
+        {puedePreguntar && usuario && (
+          <BotonPreguntarArrendador publicacionId={publicacion.id} usuarioId={usuario.id} />
         )}
         <Link href="/" className="mt-8 inline-block text-sm underline">
           Volver al inicio
