@@ -90,3 +90,66 @@ como Hasta el último día incluido.
   11 al 13 da el aviso del 409; la disponibilidad pública muestra el bloqueo
   sin el motivo; a 375 px no hay scroll horizontal; una publicación que no
   existe muestra "Publicación no encontrada".
+
+## FE-13.1. Calendario de disponibilidad (MP4-58)
+
+El calendario en el detalle de un bien (H13): cualquiera con sesión ve qué
+días están libres antes de pedir una reserva.
+
+### Dónde está
+
+En `/publicaciones/{id}`, sección "Disponibilidad":
+
+- **Arrendatario:** `SelectorDisponibilidad`. Elige un período pulsando el
+  primer y el último día.
+- **Arrendador u otro rol:** el mismo `CalendarioDisponibilidad` de FE-14.1,
+  solo de lectura.
+
+### Componentes (`components/disponibilidad/`)
+
+- `CalendarioDisponibilidad` (de FE-14.1). Se le agrega `onDiaNoDisponible`:
+  con esa prop, pulsar un día pasado u ocupado no lo elige y avisa. Los días
+  pasados quedan `aria-disabled`: el lector de pantalla los anuncia como no
+  disponibles, pero se pueden pulsar para ver por qué.
+- `LeyendaDisponibilidad`: la leyenda, separada del calendario como pide la
+  ficha.
+- `SelectorDisponibilidad`: el calendario más la elección del período.
+
+### Reglas al elegir
+
+| Situación | Qué ve el arrendatario |
+|---|---|
+| Pulsa un día pasado | "No se pueden elegir fechas pasadas." (H13, criterio 3) |
+| Pulsa un día ocupado | "Ese día ya tiene una reserva confirmada." o "Ese día no está disponible." (bloqueo) |
+| El período incluye días ocupados | "El período elegido incluye días ocupados." y no se acepta. |
+| Período de más de 92 días | "Elige un período de 92 días o menos." (el límite del backend) |
+| Período válido | "Seleccionado: 15 dic 2026 – 18 dic 2026 (días libres)" |
+
+Antes de aceptar un período se le pregunta al backend por el rango completo,
+porque el calendario solo conoce el mes que se ve y el período puede pasar a
+otro mes.
+
+Los días con solicitudes `PENDIENTE` se ven libres (H13, criterio 2): el
+backend no las manda como ocupadas. La pantalla lo explica en una línea.
+
+### Conexión con la solicitud de reserva (FE-03.1)
+
+`SelectorDisponibilidad` tiene `onPeriodoElegido({ desde, hasta })`, que se
+llama con el período elegido (solo días libres) o con `null` al limpiar. Es
+donde se conecta el `SelectorPeriodo` de FE-03.1 cuando exista: la página del
+detalle todavía no lo usa porque la solicitud de reserva no está hecha.
+
+### Cómo lo probé
+
+- `npm test`: 101 pruebas, 11 nuevas: los estados del calendario (libre,
+  ocupado, bloqueado, pasado, pendiente como libre, cargando, error y
+  reintento, solo lectura) y la elección (día pasado, día ocupado, período
+  libre, período con días ocupados, período que pasa a otro mes, empezar de
+  nuevo, limpiar y error de red).
+- `npm run lint` y `npm run build` sin errores.
+- Recorrido en Chrome contra el backend de `main` como arrendatario: el
+  arrendatario no ve "Bloquear fechas"; pulsar el 10 de noviembre avisa que
+  es pasado; en diciembre el 12 sale ocupado por reserva y del 22 al 24
+  bloqueados; elegir del 10 al 14 avisa que incluye días ocupados; del 15 al
+  18 queda seleccionado; a 375 px no hay scroll horizontal.
+
