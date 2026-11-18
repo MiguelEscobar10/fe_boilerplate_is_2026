@@ -15,7 +15,7 @@ import {
   type EstadoReserva,
   type Solicitud,
 } from "@/lib/solicitudes/tipos";
-import { DetalleSolicitud } from "./detalle-solicitud";
+import { DetalleSolicitud, type ErrorDecision } from "./detalle-solicitud";
 import { TablaSolicitudes } from "./tabla-solicitudes";
 
 function mensajeDeError(error: unknown) {
@@ -54,6 +54,9 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [abierta, setAbierta] = useState<Abierta | null>(null);
+  // Error de una decisión (409 o 404) cuya solicitud puede salir de la lista
+  // al recargar, por ejemplo con el filtro PENDIENTE. Así no se pierde.
+  const [aviso, setAviso] = useState<(ErrorDecision & { id: string }) | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -77,6 +80,7 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
 
   function cambiarEstado(valor: string) {
     const nuevo = valor === "" ? null : (valor as EstadoReserva);
+    setAviso(null);
     setCargando(true);
     setError(null);
     setAbierta(null);
@@ -86,6 +90,7 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
   }
 
   function irAPagina(nueva: number) {
+    setAviso(null);
     setCargando(true);
     setError(null);
     setAbierta(null);
@@ -115,6 +120,10 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
       ),
     );
   }
+
+  // Solo hace falta cuando la solicitud ya no está en la lista: si sigue, el
+  // detalle muestra el mismo error.
+  const avisoVisible = aviso && !items.some((s) => s.id === aviso.id) ? aviso : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -152,6 +161,13 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
         </div>
       </div>
 
+      {avisoVisible && (
+        <div role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+          <p>{avisoVisible.mensaje}</p>
+          {avisoVisible.detalle && <p className="mt-1 text-xs">{avisoVisible.detalle}</p>}
+        </div>
+      )}
+
       {cargando && items.length === 0 ? (
         <p role="status" className="py-8 text-center text-sm text-zinc-600 dark:text-zinc-400">
           Cargando solicitudes...
@@ -176,7 +192,10 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
           <TablaSolicitudes
             solicitudes={items}
             seleccionadaId={abierta?.id ?? null}
-            onAbrir={(s, decision) => setAbierta({ id: s.id, decision })}
+            onAbrir={(s, decision) => {
+              setAviso(null);
+              setAbierta({ id: s.id, decision });
+            }}
           />
           {paginas > 1 && (
             <nav aria-label="Paginación" className="flex items-center justify-center gap-3 text-sm">
@@ -211,7 +230,10 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
           solicitud={solicitudAbierta}
           decisionInicial={abierta.decision}
           onDecidida={decidida}
-          onDesactualizada={recargar}
+          onDesactualizada={(error) => {
+            setAviso({ ...error, id: abierta.id });
+            recargar();
+          }}
           onCerrar={() => setAbierta(null)}
         />
       )}

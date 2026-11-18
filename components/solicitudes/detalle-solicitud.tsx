@@ -21,14 +21,14 @@ import { EstadoReservaBadge } from "./estado-reserva";
 export const MENSAJE_CONFLICTO =
   "La solicitud ya fue atendida o el período dejó de estar disponible.";
 
-type Error = {
+export type ErrorDecision = {
   /** Lo principal, en el idioma de la pantalla. */
   mensaje: string;
   /** El detalle que mandó el backend, si aporta algo (p. ej. el del 409). */
   detalle?: string;
 };
 
-function errorDeDecision(e: unknown): Error {
+function errorDeDecision(e: unknown): ErrorDecision {
   if (e instanceof DecisionRechazadaError) {
     if (e.status === 409) {
       return { mensaje: MENSAJE_CONFLICTO, detalle: e.message || undefined };
@@ -53,8 +53,11 @@ type Props = {
   decisionInicial?: Decision;
   /** 200: el panel actualiza la fila con lo que devolvió el backend. */
   onDecidida: (resultado: DecisionGuardada) => void;
-  /** 409 o 404: lo que se ve ya no es el estado real; el panel recarga. */
-  onDesactualizada: () => void;
+  /**
+   * 409 o 404: lo que se ve ya no es el estado real; el panel recarga. Recibe
+   * el error para que el panel lo siga mostrando si la fila sale de la lista.
+   */
+  onDesactualizada: (error: ErrorDecision) => void;
   onCerrar: () => void;
 };
 
@@ -74,7 +77,7 @@ export function DetalleSolicitud({
     solicitud.estado === "PENDIENTE" ? (decisionInicial ?? null) : null,
   );
   const [enviando, setEnviando] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<ErrorDecision | null>(null);
   const [exito, setExito] = useState<string | null>(null);
   // El estado de React se actualiza después del render: este ref corta un
   // segundo clic que llegue antes.
@@ -104,13 +107,14 @@ export function DetalleSolicitud({
       onDecidida(resultado);
     } catch (e) {
       if (e instanceof SesionExpiradaError) return;
-      setError(errorDeDecision(e));
+      const problema = errorDeDecision(e);
+      setError(problema);
       setDecision(null);
       if (
         e instanceof DecisionRechazadaError &&
         (e.status === 409 || e.status === 404)
       ) {
-        onDesactualizada();
+        onDesactualizada(problema);
       }
     } finally {
       enviandoRef.current = false;

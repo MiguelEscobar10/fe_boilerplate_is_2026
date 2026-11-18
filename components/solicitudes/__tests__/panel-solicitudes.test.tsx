@@ -377,6 +377,67 @@ describe("PanelSolicitudes: decidir", () => {
     expect(await within(filaDe("Ana Pérez")).findByText("RECHAZADA")).toBeInTheDocument();
   });
 
+  it("409 con el filtro PENDIENTE: la solicitud sale de la lista y el aviso se sigue viendo", async () => {
+    const user = userEvent.setup();
+    const solicitud = ana();
+    let llamada = 0;
+    simularApi({
+      // Otra pestaña ya la aprobó: al recargar ya no es PENDIENTE.
+      lista: () => json(pagina(++llamada === 1 ? [solicitud] : [])),
+      decidir: () =>
+        json(
+          {
+            statusCode: 409,
+            codigo: "SOLICITUD_YA_DECIDIDA",
+            message: "Esta solicitud no se puede modificar.",
+          },
+          409,
+        ),
+    });
+    render(<PanelSolicitudes estadoInicial="PENDIENTE" />);
+    await screen.findByText("Ana Pérez");
+
+    await user.click(within(filaDe("Ana Pérez")).getByRole("button", { name: /^Rechazar/ }));
+    await user.click(within(detalle()).getByRole("button", { name: "Rechazar solicitud" }));
+
+    expect(
+      await screen.findByText("No tienes solicitudes en estado PENDIENTE."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: /^Solicitud de / })).not.toBeInTheDocument();
+    const alerta = screen.getByRole("alert");
+    expect(alerta).toHaveTextContent(MENSAJE_CONFLICTO);
+    expect(alerta).toHaveTextContent("Esta solicitud no se puede modificar.");
+
+    await user.selectOptions(screen.getByLabelText("Filtrar por estado"), "");
+    await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
+  });
+
+  it("409 con la solicitud todavía en la lista: el error sale una sola vez, en el detalle", async () => {
+    const user = userEvent.setup();
+    const solicitud = ana();
+    const api = simularApi({
+      lista: () => json(pagina([solicitud])),
+      decidir: () =>
+        json(
+          {
+            statusCode: 409,
+            codigo: "CONFLICTO_DISPONIBILIDAD",
+            message: "Conflicto de disponibilidad: bloqueaste esas fechas.",
+          },
+          409,
+        ),
+    });
+    render(<PanelSolicitudes />);
+    await screen.findByText("Ana Pérez");
+
+    await user.click(within(filaDe("Ana Pérez")).getByRole("button", { name: /^Aprobar/ }));
+    await user.click(within(detalle()).getByRole("button", { name: "Sí, aprobar" }));
+
+    await within(detalle()).findByRole("alert");
+    await waitFor(() => expect(api.llamadasLista()).toHaveLength(2));
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+  });
+
   it("403: «Esta solicitud no se puede modificar.»", async () => {
     const user = userEvent.setup();
     simularApi({
