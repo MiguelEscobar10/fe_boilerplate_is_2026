@@ -3,6 +3,44 @@
 Pantallas de conversación entre arrendatario y arrendador. Backend:
 `docs/modulos/mensajeria.md` en el repo del backend (BE-15.1, BE-16.1).
 
+## FE-15.1. Chat antes de reservar (MP4-83)
+
+`BotonPreguntarArrendador` (`components/mensajeria/boton-preguntar-arrendador.tsx`)
+en el detalle de la publicación (`app/publicaciones/[id]/page.tsx`). Solo lo
+ve un ARRENDATARIO que no es el dueño.
+
+- "Contactar al arrendador" abre o recupera la conversación
+  (`POST /api/publicaciones/[id]/conversaciones` → BE-15.1) y muestra el
+  historial con la caja, con los mismos `ConversacionChat` y `CajaMensaje` de
+  FE-16.1.
+- "Enviar" queda deshabilitado con el mensaje vacío o de más de 1000
+  caracteres y durante el envío.
+- Un 404 (publicación inactiva o que ya no existe) se ve como "Conversación no
+  disponible". Un error de red deja "Reintentar", tanto al abrir como al
+  cargar el historial.
+
+### Botón temporal
+
+La ficha pone el botón en `DetallePublicacionCompleto` de FE-12.1 (Elias), que
+todavía no existe. Para no atrasar H15 va por ahora en el detalle actual
+(acordado en MP4-38). Cuando entre FE-12.1 se mueve el componente tal cual y
+se quitan estas líneas de `app/publicaciones/[id]/page.tsx`.
+
+### Pruebas
+
+- `components/mensajeria/__tests__/boton-preguntar-arrendador.test.tsx`: no
+  llama al backend hasta pulsar, abre y envía, recupera un historial
+  existente, Enviar deshabilitado con vacío y 1001, 404 como "Conversación no
+  disponible", reintentar tras un error de red y el botón deshabilitado
+  mientras abre.
+- El route handler está en `app/api/conversaciones/__tests__/route.test.ts`.
+
+Sin el caso del 404 falla 1 prueba.
+
+Recorrido en Chrome contra el backend: el arrendatario pulsa "Contactar al
+arrendador", Enviar arranca deshabilitado, el mensaje queda y sigue al
+recargar; el dueño de la publicación no ve el botón.
+
 ## FE-16.1. Conversación de la reserva (MP4-87)
 
 Ruta: **`/reservas/{id}/conversacion`**, para ARRENDADOR y ARRENDATARIO
