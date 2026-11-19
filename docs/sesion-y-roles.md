@@ -74,8 +74,9 @@ es justo lo que la cookie httpOnly evita, y a mantener dos fuentes de verdad.
 Con Server Components, cada página pide el usuario al backend cuando lo
 necesita y siempre ve el rol real.
 
-La decisión general de estado del frontend (MP4-129) la toma el equipo; esto
-documenta cómo quedó la sesión.
+La decisión general de estado del frontend (MP4-129) está en
+[`decisiones/manejo-de-estado.md`](decisiones/manejo-de-estado.md), con las
+alternativas que se descartaron y cuándo conviene revisarla.
 
 ### Cómo probarlo
 
