@@ -87,3 +87,14 @@ export function enviarMensaje(conversacionId: string, contenido: string) {
     body: JSON.stringify({ contenido }),
   });
 }
+
+/**
+ * Abre o recupera la conversación previa con el arrendador de una publicación
+ * (H15). Solo un ARRENDATARIO; con una publicación propia o inactiva es 404.
+ */
+export function abrirConversacionDePublicacion(publicacionId: string) {
+  return pedir<{ id: string }>(
+    `/api/publicaciones/${encodeURIComponent(publicacionId)}/conversaciones`,
+    { method: "POST" },
+  );
+}

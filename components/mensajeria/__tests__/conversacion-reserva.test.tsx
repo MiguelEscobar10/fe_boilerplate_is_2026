@@ -395,6 +395,13 @@ describe("ConversacionReserva (FE-16.1)", () => {
 });
 
 describe("validarMensaje", () => {
+  it("cuenta los emojis como un carácter, igual que el backend", () => {
+    expect(validarMensaje("😀".repeat(1000))).toBeNull();
+    expect(validarMensaje("😀".repeat(1001))).toBe(
+      "El mensaje no puede pasar de 1000 caracteres.",
+    );
+  });
+
   it.each([
     ["", "Escribe un mensaje."],
     ["   ", "Escribe un mensaje."],

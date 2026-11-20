@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { Decision, Solicitud } from "@/lib/solicitudes/tipos";
 import { formatearMonto, formatearPeriodo } from "@/lib/solicitudes/formato";
 import { EstadoReservaBadge } from "./estado-reserva";
@@ -10,14 +11,30 @@ type Props = {
   seleccionadaId: string | null;
   /** Abre el detalle; con `decision`, ya en el paso de confirmar. */
   onAbrir: (solicitud: Solicitud, decision?: Decision) => void;
+  /** Abre el formulario para calificar al arrendatario (H18). */
+  onCalificar: (solicitud: Solicitud) => void;
 };
+
+/**
+ * H18: "Calificar al arrendatario" solo en las COMPLETADA sin calificar. Si el
+ * backend no manda `arrendatarioCalificado` (antes de BE-18.1) se ofrece la
+ * acción y el 409 avisa si ya estaba calificada.
+ */
+function puedeCalificar(s: Solicitud) {
+  return s.estado === "COMPLETADA" && s.arrendatarioCalificado !== true;
+}
 
 /**
  * Tabla de "Mis solicitudes" (H04, criterio 1): quién la hizo, el bien, las
  * fechas, el costo estimado y el estado. Las PENDIENTE tienen Aprobar y
  * Rechazar; la decisión se confirma en el detalle.
  */
-export function TablaSolicitudes({ solicitudes, seleccionadaId, onAbrir }: Props) {
+export function TablaSolicitudes({
+  solicitudes,
+  seleccionadaId,
+  onAbrir,
+  onCalificar,
+}: Props) {
   return (
     // `relative`: el encabezado "Acciones" es sr-only (position: absolute) y,
     // sin un ancestro posicionado, se sale del contenedor con scroll y
@@ -75,14 +92,41 @@ export function TablaSolicitudes({ solicitudes, seleccionadaId, onAbrir }: Props
                       </button>
                     </>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => onAbrir(s)}
+                    <>
+                      {puedeCalificar(s) && (
+                        <button
+                          type="button"
+                          onClick={() => onCalificar(s)}
+                          aria-label={`Calificar al arrendatario ${s.arrendatario.nombre} por ${s.publicacion.nombre}`}
+                          className="rounded-md bg-foreground px-3 py-1 text-xs font-medium text-background"
+                        >
+                          Calificar al arrendatario
+                        </button>
+                      )}
+                      {s.estado === "EN_CURSO" && (
+                        // H09: la devolución y la garantía se registran en su pantalla.
+                        <Link
+                          href={`/reservas/${s.id}/devolucion`}
+                          aria-label={`Registrar la devolución de ${s.publicacion.nombre} por ${s.arrendatario.nombre}`}
+                          className="rounded-md bg-foreground px-3 py-1 text-xs font-medium text-background"
+                        >
+                          Registrar devolución
+                        </Link>
+                      )}
+                      {s.estado === "COMPLETADA" && s.arrendatarioCalificado === true && (
+                        <span className="self-center text-xs text-zinc-600 dark:text-zinc-400">
+                          Ya calificado ✓
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => onAbrir(s)}
                       aria-label={`Ver la solicitud de ${s.arrendatario.nombre} para ${s.publicacion.nombre}`}
                       className="rounded-md border border-zinc-300 px-3 py-1 text-xs font-medium dark:border-zinc-700"
                     >
-                      Ver
-                    </button>
+                        Ver
+                      </button>
+                    </>
                   )}
                 </div>
               </td>

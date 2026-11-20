@@ -48,6 +48,7 @@ export function pagina(
 type Rutas = {
   lista?: (query: URLSearchParams) => Respuesta;
   decidir?: (id: string, body: Record<string, unknown>) => Respuesta;
+  calificar?: (id: string, body: Record<string, unknown>) => Respuesta;
 };
 
 /**
@@ -69,6 +70,15 @@ export function simularApi(rutas: Rutas) {
         JSON.parse(String(init?.body)) as Record<string, unknown>,
       );
     }
+    const calificar = url.pathname.match(
+      /^\/api\/reservas\/([^/]+)\/calificacion-arrendatario$/,
+    );
+    if (metodo === "POST" && calificar && rutas.calificar) {
+      return rutas.calificar(
+        decodeURIComponent(calificar[1]),
+        JSON.parse(String(init?.body)) as Record<string, unknown>,
+      );
+    }
     throw new Error(`Llamada no esperada: ${metodo} ${url.pathname}`);
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -85,6 +95,10 @@ export function simularApi(rutas: Rutas) {
     llamadasLista: () =>
       llamadas("GET", /^\/api\/arrendador\/solicitudes$/).map(
         ([entrada]) => new URL(String(entrada), "http://localhost").searchParams,
+      ),
+    llamadasCalificar: () =>
+      llamadas("POST", /\/calificacion-arrendatario$/).map(([, init]) =>
+        JSON.parse(String(init?.body)) as Record<string, unknown>,
       ),
     llamadasDecision: () =>
       llamadas("PATCH", /\/decision$/).map(([, init]) =>
