@@ -163,3 +163,22 @@ describe("route handlers de verificación", () => {
     });
   });
 });
+
+describe("route handler de requiere verificación", () => {
+  it("PATCH reenvía el JSON a /publicaciones/{id}/requiere-verificacion", async () => {
+    const { PATCH } = await import("../../publicaciones/[id]/requiere-verificacion/route");
+    fetchMock.mockResolvedValue(jsonResponse({ id: ID, requiereVerificacion: true }));
+    const body = JSON.stringify({ requiereVerificacion: true });
+
+    const res = await PATCH(
+      new NextRequest(`http://localhost/api/publicaciones/${ID}/requiere-verificacion`, { method: "PATCH", body }),
+      params(),
+    );
+
+    expect(urlLlamada()).toBe(`http://backend.test/api/v1/publicaciones/${ID}/requiere-verificacion`);
+    expect(llamada()[1]?.body).toBe(body);
+    expect(headersLlamada().get("Authorization")).toBe("Bearer token-123");
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ id: ID, requiereVerificacion: true });
+  });
+});
