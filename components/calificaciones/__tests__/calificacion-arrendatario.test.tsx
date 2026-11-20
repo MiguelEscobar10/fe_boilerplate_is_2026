@@ -232,6 +232,11 @@ describe("Calificar al arrendatario: el formulario", () => {
     );
     await waitFor(() => expect(api.llamadasLista()).toHaveLength(2));
     expect(await within(filaDe("Ana Pérez")).findByText("EN_CURSO")).toBeInTheDocument();
+    // La reserva sigue en la lista, pero el formulario ya se cerró: el aviso
+    // de arriba sigue siendo el único lugar donde se lee el error.
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Solo puedes calificar al arrendatario de una reserva COMPLETADA.",
+    );
   });
 
   it("422 con el filtro COMPLETADA: la reserva sale de la lista y el aviso se sigue viendo", async () => {

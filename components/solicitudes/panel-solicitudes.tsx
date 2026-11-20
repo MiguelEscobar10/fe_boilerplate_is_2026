@@ -19,7 +19,7 @@ import {
   FormularioCalificacionArrendatario,
   type ResultadoCalificacion,
 } from "@/components/calificaciones/formulario-calificacion-arrendatario";
-import { DetalleSolicitud } from "./detalle-solicitud";
+import { DetalleSolicitud, type ErrorDecision } from "./detalle-solicitud";
 import { TablaSolicitudes } from "./tabla-solicitudes";
 
 function mensajeDeError(error: unknown) {
@@ -59,9 +59,10 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [abierta, setAbierta] = useState<Abierta | null>(null);
-  // Aviso que tiene que seguir a la vista aunque se cierre el formulario
-  // (p. ej. un 422 al calificar: la reserva ya no está en el filtro).
-  const [aviso, setAviso] = useState<string | null>(null);
+  // Aviso que tiene que seguir a la vista aunque la solicitud salga de la
+  // lista al recargar o se cierre su formulario: el 409 o 404 al decidir con
+  // el filtro PENDIENTE, o el 422 o 404 al calificar.
+  const [aviso, setAviso] = useState<(ErrorDecision & { id: string }) | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -84,8 +85,8 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
   const solicitudAbierta = abierta ? items.find((s) => s.id === abierta.id) : undefined;
 
   function cambiarEstado(valor: string) {
-    setAviso(null);
     const nuevo = valor === "" ? null : (valor as EstadoReserva);
+    setAviso(null);
     setCargando(true);
     setError(null);
     setAbierta(null);
@@ -133,7 +134,7 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
       // Al recargar, la reserva puede salir del filtro y el formulario se
       // cerraría sin que se lea el error: se cierra ya y el aviso queda arriba.
       setAbierta(null);
-      setAviso(mensaje ?? null);
+      setAviso(mensaje ? { id, mensaje } : null);
       recargar();
       return;
     }
@@ -141,6 +142,13 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
       actuales.map((s) => (s.id === id ? { ...s, arrendatarioCalificado: true } : s)),
     );
   }
+
+  // Si el detalle de esa misma solicitud sigue abierto, ya muestra el error:
+  // el aviso de arriba solo hace falta cuando no se ve.
+  const avisoVisible =
+    aviso && !(abierta?.id === aviso.id && items.some((s) => s.id === aviso.id))
+      ? aviso
+      : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -178,13 +186,14 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
         </div>
       </div>
 
-      {aviso && (
-        <p
+      {avisoVisible && (
+        <div
           role="alert"
           className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200"
         >
-          {aviso}
-        </p>
+          <p>{avisoVisible.mensaje}</p>
+          {avisoVisible.detalle && <p className="mt-1 text-xs">{avisoVisible.detalle}</p>}
+        </div>
       )}
 
       {cargando && items.length === 0 ? (
@@ -262,8 +271,16 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
           solicitud={solicitudAbierta}
           decisionInicial={abierta.decision}
           onDecidida={decidida}
-          onDesactualizada={recargar}
-          onCerrar={() => setAbierta(null)}
+          onDesactualizada={(error) => {
+            setAviso({ ...error, id: abierta.id });
+            recargar();
+          }}
+          onCerrar={() => {
+            // El error ya se leyó en el detalle: al cerrarlo no tiene que
+            // reaparecer arriba.
+            setAviso((a) => (a?.id === abierta.id ? null : a));
+            setAbierta(null);
+          }}
         />
       )}
     </div>
