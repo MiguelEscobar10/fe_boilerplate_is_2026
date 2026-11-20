@@ -64,3 +64,73 @@ Con un 401 se va a `/login`, como en las demás pantallas.
 y datos de la tarjeta, publicación sin foto, consulta inicial y desde la URL,
 buscar con botón y con Enter, borrar la búsqueda, estado vacío, paginación,
 falla de red con reintento, 502, otro error y 401.
+
+## FE-11.1. Panel de filtros del catálogo (MP4-46)
+
+Encima del listado, el usuario filtra por tipo, ubicación, rango de precios y
+fechas disponibles (H11). Los filtros se combinan entre sí y con la búsqueda.
+Consume los parámetros de BE-11.1 sobre el mismo `GET /publicaciones`.
+
+### Pantalla
+
+Es la misma, `/publicaciones`. Acepta además
+`?tipo=ESPACIO&ubicacion=San Salvador&precioMin=5&precioMax=30&fechaInicio=2026-12-01&fechaFin=2026-12-03`.
+Al aplicar o quitar filtros se actualiza la URL y se vuelve a la página 1.
+
+### Componentes (`components/catalogo/`)
+
+- `FiltrosCatalogo`: el formulario con tipo, ubicación, precio mínimo y máximo
+  y las fechas, y el botón "Aplicar filtros". Mientras hay una consulta en
+  curso el botón dice "Aplicando..." y está deshabilitado.
+- `SelectorRangoFechas`: "Fecha de inicio" y "Fecha de fin". No deja elegir
+  días anteriores a hoy.
+- `FiltrosActivos`: una etiqueta por cada filtro aplicado, con su botón para
+  quitarlo, y "Limpiar filtros".
+
+### Validación antes de enviar
+
+Las reglas están en `lib/catalogo/filtros.ts` (`validarFiltros`) y son las
+mismas de BE-11.1:
+
+| Regla | Mensaje |
+|---|---|
+| Precio que no es un número de 0 en adelante con hasta dos decimales | "El precio mínimo (o máximo) debe ser un número de 0 en adelante, con hasta dos decimales." |
+| Precio mínimo mayor que el máximo | "El precio mínimo no puede ser mayor que el máximo." |
+| Solo una de las dos fechas | "Para filtrar por fechas elige la fecha de inicio y la de fin." |
+| Fecha de inicio anterior a hoy (día de El Salvador) | "La fecha de inicio no puede estar en el pasado." |
+| Fecha de fin anterior a la de inicio | "La fecha de fin no puede ser anterior a la de inicio." |
+
+Con un rango inválido el error aparece en el panel y **no se consulta**: los
+resultados, los filtros activos y la URL quedan como estaban.
+
+### Estados
+
+Los de FE-02.1, con dos cambios en el vacío:
+
+- Con filtros: "Ninguna publicación cumple estos filtros..." y el botón
+  "Limpiar filtros".
+- Con búsqueda y filtros: el mensaje nombra las dos cosas y están los dos
+  botones, "Limpiar filtros" y "Ver todas las publicaciones".
+
+### Decisiones
+
+- **Los filtros se aplican con el botón**, no al cambiar cada campo: así un
+  rango a medio escribir no dispara consultas ni errores.
+- **Los filtros de la URL que no sirven se ignoran** (`leerFiltros`): un tipo
+  que no existe, un precio mal escrito, un rango al revés o unas fechas
+  pasadas. Un enlace viejo con fechas que ya pasaron abre el catálogo sin ese
+  filtro en vez de dar error.
+- **La fecha de fin puede ser igual a la de inicio** (un solo día). La ficha
+  dice "fin posterior al inicio"; el backend acepta el mismo día porque las
+  dos fechas van incluidas.
+- El route handler `GET /api/publicaciones` ahora deja pasar también `tipo`,
+  `ubicacion`, `precioMin`, `precioMax`, `fechaInicio` y `fechaFin`.
+
+### Pruebas
+
+- `lib/catalogo/__tests__/filtros.test.ts` (14 pruebas): las reglas, la
+  lectura de la URL y las etiquetas de los filtros activos.
+- `components/catalogo/__tests__/filtros-catalogo.test.tsx` (13 pruebas):
+  aplicar, filtros desde la URL, botón al cargar, cada rango inválido sin
+  cambiar los resultados, corregir, quitar un filtro, limpiar y los dos
+  estados vacíos.
