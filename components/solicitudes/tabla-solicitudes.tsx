@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { Decision, Solicitud } from "@/lib/solicitudes/tipos";
 import { formatearMonto, formatearPeriodo } from "@/lib/solicitudes/formato";
 import { EstadoReservaBadge } from "./estado-reserva";
@@ -101,6 +102,16 @@ export function TablaSolicitudes({
                         >
                           Calificar al arrendatario
                         </button>
+                      )}
+                      {s.estado === "EN_CURSO" && (
+                        // H09: la devolución y la garantía se registran en su pantalla.
+                        <Link
+                          href={`/reservas/${s.id}/devolucion`}
+                          aria-label={`Registrar la devolución de ${s.publicacion.nombre} por ${s.arrendatario.nombre}`}
+                          className="rounded-md bg-foreground px-3 py-1 text-xs font-medium text-background"
+                        >
+                          Registrar devolución
+                        </Link>
                       )}
                       {s.estado === "COMPLETADA" && s.arrendatarioCalificado === true && (
                         <span className="self-center text-xs text-zinc-600 dark:text-zinc-400">
