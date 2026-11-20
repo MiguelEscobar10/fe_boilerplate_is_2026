@@ -9,6 +9,8 @@ type Props = {
   deshabilitado?: boolean;
   /** id del mensaje de error, para aria-describedby. */
   idError?: string;
+  /** Texto de la leyenda. Por defecto, el de la calificación del arrendatario. */
+  etiqueta?: string;
 };
 
 const PUNTAJES = Array.from(
@@ -20,11 +22,17 @@ const PUNTAJES = Array.from(
  * Estrellas de 1 a 5. Por dentro son radios, así se eligen también con el
  * teclado (flechas) y el lector de pantalla dice "3 estrellas, 3 de 5".
  */
-export function SelectorEstrellas({ valor, onCambiar, deshabilitado, idError }: Props) {
+export function SelectorEstrellas({
+  valor,
+  onCambiar,
+  deshabilitado,
+  idError,
+  etiqueta = "Calificación del arrendatario (1 a 5)",
+}: Props) {
   const nombre = useId();
   return (
     <fieldset aria-describedby={idError} className="flex flex-col gap-1">
-      <legend className="mb-1 text-sm font-medium">Calificación del arrendatario (1 a 5)</legend>
+      <legend className="mb-1 text-sm font-medium">{etiqueta}</legend>
       <div className="flex gap-1">
         {PUNTAJES.map((n) => {
           const llena = valor !== null && n <= valor;
