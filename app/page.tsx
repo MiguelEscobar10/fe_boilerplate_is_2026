@@ -20,12 +20,20 @@ export default async function Home() {
         </p>
       </div>
       {user.rol === "ARRENDADOR" && (
-        <Link
-          href="/publicaciones/nueva"
-          className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background"
-        >
-          Publicar un equipo o espacio
-        </Link>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link
+            href="/publicaciones/nueva"
+            className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background"
+          >
+            Publicar un equipo o espacio
+          </Link>
+          <Link
+            href="/arrendador/solicitudes?estado=PENDIENTE"
+            className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium dark:border-zinc-700"
+          >
+            Mis solicitudes
+          </Link>
+        </div>
       )}
     </div>
   );
