@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarioDisponibilidad } from "@/components/disponibilidad/calendario-disponibilidad";
-import { SelectorDisponibilidad } from "@/components/disponibilidad/selector-disponibilidad";
+import { FormularioSolicitud } from "@/components/reservas/formulario-solicitud";
 import { BotonPreguntarArrendador } from "@/components/mensajeria/boton-preguntar-arrendador";
 import { DetallePublicacion } from "@/components/publicaciones/detalle-publicacion";
 import { getCurrentUser } from "@/lib/dal";
@@ -42,9 +42,14 @@ export default async function PublicacionPage(props: PageProps<"/publicaciones/[
             Los días con solicitudes pendientes se ven libres: una solicitud no aparta fechas
             hasta que el arrendador la aprueba.
           </p>
-          {/* Quien puede reservar elige un período; el resto solo lo ve. */}
+          {/* Quien puede reservar elige un período y lo solicita; el resto solo lo ve. */}
           {usuario?.rol === "ARRENDATARIO" ? (
-            <SelectorDisponibilidad publicacionId={publicacion.id} />
+            <FormularioSolicitud
+              publicacionId={publicacion.id}
+              tarifaMonto={publicacion.tarifaMonto}
+              tarifaUnidad={publicacion.tarifaUnidad}
+              depositoMonto={publicacion.depositoMonto}
+            />
           ) : (
             <CalendarioDisponibilidad publicacionId={publicacion.id} />
           )}
