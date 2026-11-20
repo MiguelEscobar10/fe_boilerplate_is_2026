@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { EstadoPago } from "@/components/pagos/estado-pago";
 import { EstadoReserva } from "@/components/reservas/estado-reserva";
 import { ResumenReserva } from "@/components/reservas/resumen-reserva";
 import { RutaProtegida } from "@/components/ruta-protegida";
@@ -51,6 +52,7 @@ async function ContenidoReserva({ id }: { id: string }) {
           costo={reserva.costoAlquiler}
           deposito={reserva.depositoMonto}
         />
+        {esArrendatario && <EstadoPago reservaId={reserva.id} />}
         {esArrendatario && reserva.estado === "CONFIRMADA" && (
           <Link
             href={`/reservas/${encodeURIComponent(reserva.id)}/pago`}

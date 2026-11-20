@@ -146,3 +146,48 @@ viene, por status.
 5. Probar 4242 (aprobado), 0002 tres veces (intentos 2, 1 y el formulario
    desaparece), una tarjeta terminada en otra cosa, y un cuarto intento para
    `INTENTOS_AGOTADOS`.
+
+## FE-06.1. Estado del pago en el detalle de reserva (MP4-70)
+
+Historia H06. En `/reservas/{id}` el arrendatario ve una sección «Pago» con el
+último intento de pago de la reserva. Solo la ve el `ARRENDATARIO`: el
+arrendador no consulta pagos (BE-06.1, MP4-69).
+
+### Componentes y archivos
+
+- `EstadoPago` (`components/pagos/estado-pago.tsx`): consulta al abrirse y con
+  el botón «Actualizar estado», sin recargar la página. El botón se
+  deshabilita mientras consulta y solo cuenta la respuesta de la última
+  consulta.
+- `MensajeSinPago`: «Aún no hay un pago registrado para esta reserva».
+- `lib/pagos/ultimo.ts`: llamada del navegador a
+  `GET /api/reservas/{id}/pagos/ultimo` (route handler que reenvía al backend
+  con el token de la cookie).
+- `UltimoPago` en `lib/pagos/tipos.ts`: el contrato de la respuesta 200.
+
+### Estados
+
+| Estado | Cuándo | Qué se ve |
+|---|---|---|
+| cargando | Mientras responde | «Consultando el pago…» |
+| aprobado / rechazado / en proceso | 200 | ID de reserva, importe, fecha (hora de El Salvador) y estado; el motivo si fue rechazado |
+| sin registro | 404 con `codigo: PAGO_NO_REGISTRADO` | «Aún no hay un pago registrado para esta reserva» |
+| reserva no disponible | Otro 404 | «Reserva no disponible» |
+| error | 5xx, respuesta inválida o sin conexión | Mensaje de error con el botón para reintentar |
+
+Un 401 lleva al login, como en el resto de pantallas.
+
+### Notas
+
+- El importe viene como string con 2 decimales y se muestra con
+  `formatearMonto`; no se suma ni se recalcula.
+- `PENDIENTE` se muestra como «En proceso»: solo ocurre mientras la pasarela
+  espera su respuesta.
+- Depende de BE-06.1 (PR #69 del backend).
+
+### Pruebas
+
+`components/pagos/__tests__/estado-pago.test.tsx` (datos del JSON, motivo,
+sin pago, otro 404, errores, actualizar, botón deshabilitado, 401) y
+`app/api/reservas/__tests__/ultimo-pago.route.test.ts` (reenvío, 404 con
+código, sin sesión).
