@@ -5,6 +5,8 @@ import type { NextConfig } from "next";
 const LIMITE_SUBIDA = "55mb";
 
 const nextConfig: NextConfig = {
+  // Build autocontenido para la imagen de Docker (MP4-131, docs/despliegue.md).
+  output: "standalone",
   experimental: {
     serverActions: {
       bodySizeLimit: LIMITE_SUBIDA,
