@@ -15,6 +15,10 @@ import {
   type EstadoReserva,
   type Solicitud,
 } from "@/lib/solicitudes/tipos";
+import {
+  FormularioCalificacionArrendatario,
+  type ResultadoCalificacion,
+} from "@/components/calificaciones/formulario-calificacion-arrendatario";
 import { DetalleSolicitud, type ErrorDecision } from "./detalle-solicitud";
 import { TablaSolicitudes } from "./tabla-solicitudes";
 
@@ -33,7 +37,8 @@ function actualizarUrl(estado: EstadoReserva | null, page: number) {
   window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
 }
 
-type Abierta = { id: string; decision?: Decision };
+/** La solicitud abierta y qué se muestra: el detalle o la calificación. */
+type Abierta = { id: string; decision?: Decision; calificar?: boolean };
 
 type Props = {
   estadoInicial?: EstadoReserva | null;
@@ -54,8 +59,9 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [abierta, setAbierta] = useState<Abierta | null>(null);
-  // Error de una decisión (409 o 404) cuya solicitud puede salir de la lista
-  // al recargar, por ejemplo con el filtro PENDIENTE. Así no se pierde.
+  // Aviso que tiene que seguir a la vista aunque la solicitud salga de la
+  // lista al recargar o se cierre su formulario: el 409 o 404 al decidir con
+  // el filtro PENDIENTE, o el 422 o 404 al calificar.
   const [aviso, setAviso] = useState<(ErrorDecision & { id: string }) | null>(null);
 
   useEffect(() => {
@@ -121,9 +127,28 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
     );
   }
 
-  // Solo hace falta cuando la solicitud ya no está en la lista: si sigue, el
-  // detalle muestra el mismo error.
-  const avisoVisible = aviso && !items.some((s) => s.id === aviso.id) ? aviso : null;
+  // H18: tras calificar (o si el 409 dice que ya estaba) la acción deja de
+  // estar disponible en esa fila. Con un 422 o 404 se recarga la lista.
+  function calificada(id: string, resultado: ResultadoCalificacion, mensaje?: string) {
+    if (resultado === "desactualizada") {
+      // Al recargar, la reserva puede salir del filtro y el formulario se
+      // cerraría sin que se lea el error: se cierra ya y el aviso queda arriba.
+      setAbierta(null);
+      setAviso(mensaje ? { id, mensaje } : null);
+      recargar();
+      return;
+    }
+    setItems((actuales) =>
+      actuales.map((s) => (s.id === id ? { ...s, arrendatarioCalificado: true } : s)),
+    );
+  }
+
+  // Si el detalle de esa misma solicitud sigue abierto, ya muestra el error:
+  // el aviso de arriba solo hace falta cuando no se ve.
+  const avisoVisible =
+    aviso && !(abierta?.id === aviso.id && items.some((s) => s.id === aviso.id))
+      ? aviso
+      : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -162,7 +187,10 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
       </div>
 
       {avisoVisible && (
-        <div role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+        <div
+          role="alert"
+          className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200"
+        >
           <p>{avisoVisible.mensaje}</p>
           {avisoVisible.detalle && <p className="mt-1 text-xs">{avisoVisible.detalle}</p>}
         </div>
@@ -196,6 +224,10 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
               setAviso(null);
               setAbierta({ id: s.id, decision });
             }}
+            onCalificar={(s) => {
+              setAviso(null);
+              setAbierta({ id: s.id, calificar: true });
+            }}
           />
           {paginas > 1 && (
             <nav aria-label="Paginación" className="flex items-center justify-center gap-3 text-sm">
@@ -223,7 +255,16 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
         </>
       )}
 
-      {solicitudAbierta && abierta && (
+      {solicitudAbierta && abierta?.calificar && (
+        <FormularioCalificacionArrendatario
+          key={`calificar-${abierta.id}`}
+          reserva={solicitudAbierta}
+          onTerminado={(resultado, mensaje) => calificada(abierta.id, resultado, mensaje)}
+          onCerrar={() => setAbierta(null)}
+        />
+      )}
+
+      {solicitudAbierta && abierta && !abierta.calificar && (
         <DetalleSolicitud
           // Otra solicitud o la misma con otra acción: el detalle empieza de cero.
           key={`${abierta.id}-${abierta.decision ?? "ver"}`}

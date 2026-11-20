@@ -34,7 +34,8 @@ export type Solicitud = {
   motivoRechazo: string | null;
   /**
    * Si ya se calificó al arrendatario (H18). Lo agrega BE-18.1; mientras ese
-   * PR no esté en main, el backend no lo envía.
+   * PR no esté en main, el backend no lo envía y la pantalla ofrece calificar
+   * todas las COMPLETADA.
    */
   arrendatarioCalificado?: boolean;
 };
