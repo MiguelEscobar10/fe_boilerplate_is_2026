@@ -436,6 +436,10 @@ describe("PanelSolicitudes: decidir", () => {
     await within(detalle()).findByRole("alert");
     await waitFor(() => expect(api.llamadasLista()).toHaveLength(2));
     expect(screen.getAllByRole("alert")).toHaveLength(1);
+    // Al cerrar el detalle, el error ya leído no reaparece arriba.
+    await user.click(within(detalle()).getByRole("button", { name: "Cerrar" }));
+    expect(screen.queryByRole("region", { name: /^Solicitud de / })).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("403: «Esta solicitud no se puede modificar.»", async () => {

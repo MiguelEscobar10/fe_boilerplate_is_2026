@@ -275,7 +275,12 @@ export function PanelSolicitudes({ estadoInicial = null, paginaInicial = 1 }: Pr
             setAviso({ ...error, id: abierta.id });
             recargar();
           }}
-          onCerrar={() => setAbierta(null)}
+          onCerrar={() => {
+            // El error ya se leyó en el detalle: al cerrarlo no tiene que
+            // reaparecer arriba.
+            setAviso((a) => (a?.id === abierta.id ? null : a));
+            setAbierta(null);
+          }}
         />
       )}
     </div>
