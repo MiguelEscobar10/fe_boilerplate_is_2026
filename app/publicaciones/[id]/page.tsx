@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { CalendarioDisponibilidad } from "@/components/disponibilidad/calendario-disponibilidad";
 import { FormularioSolicitud } from "@/components/reservas/formulario-solicitud";
 import { BotonPreguntarArrendador } from "@/components/mensajeria/boton-preguntar-arrendador";
-import { DetallePublicacion } from "@/components/publicaciones/detalle-publicacion";
+import { DetallePublicacionCompleto } from "@/components/publicaciones/detalle-publicacion-completo";
 import { getCurrentUser } from "@/lib/dal";
 import { obtenerPublicacion } from "@/lib/publicaciones/api";
 
@@ -16,10 +15,27 @@ export default async function PublicacionPage(props: PageProps<"/publicaciones/[
   const { id } = await props.params;
   const { nueva } = await props.searchParams;
   const [publicacion, usuario] = await Promise.all([obtenerPublicacion(id), getCurrentUser()]);
-  if (!publicacion) notFound();
+  // 404 PUBLICACION_NO_DISPONIBLE: desactivada o inexistente (H12).
+  if (!publicacion) {
+    return (
+      <div className="flex flex-1 justify-center px-4 py-8">
+        <main className="flex w-full max-w-2xl flex-col items-start gap-3">
+          <h1 className="text-2xl font-semibold">Publicación no disponible</h1>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Esta publicación fue desactivada o ya no existe.
+          </p>
+          <Link
+            href="/publicaciones"
+            className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background"
+          >
+            Volver al catálogo
+          </Link>
+        </main>
+      </div>
+    );
+  }
   const esDueno = usuario?.id === publicacion.arrendadorId;
-  // FE-15.1: solo un arrendatario que no es el dueño puede preguntar. Botón
-  // temporal aquí hasta que exista el detalle completo de FE-12.1.
+  // FE-15.1: solo un arrendatario que no es el dueño puede preguntar.
   const puedePreguntar = usuario?.rol === "ARRENDATARIO" && !esDueno;
 
   return (
@@ -33,7 +49,7 @@ export default async function PublicacionPage(props: PageProps<"/publicaciones/[
             Tu publicación quedó registrada y ya aparece en el catálogo.
           </p>
         )}
-        <DetallePublicacion publicacion={publicacion} />
+        <DetallePublicacionCompleto publicacion={publicacion} />
         <section aria-labelledby="titulo-disponibilidad" className="mt-8 flex max-w-sm flex-col gap-2">
           <h2 id="titulo-disponibilidad" className="text-lg font-semibold">
             Disponibilidad
@@ -49,6 +65,7 @@ export default async function PublicacionPage(props: PageProps<"/publicaciones/[
               tarifaMonto={publicacion.tarifaMonto}
               tarifaUnidad={publicacion.tarifaUnidad}
               depositoMonto={publicacion.depositoMonto}
+              condiciones={publicacion.condiciones}
             />
           ) : (
             <CalendarioDisponibilidad publicacionId={publicacion.id} />
@@ -65,8 +82,8 @@ export default async function PublicacionPage(props: PageProps<"/publicaciones/[
         {puedePreguntar && usuario && (
           <BotonPreguntarArrendador publicacionId={publicacion.id} usuarioId={usuario.id} />
         )}
-        <Link href="/" className="mt-8 inline-block text-sm underline">
-          Volver al inicio
+        <Link href="/publicaciones" className="mt-8 inline-block text-sm underline">
+          Volver al catálogo
         </Link>
       </main>
     </div>
