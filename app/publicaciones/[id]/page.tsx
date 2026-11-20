@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarioDisponibilidad } from "@/components/disponibilidad/calendario-disponibilidad";
-import { SelectorDisponibilidad } from "@/components/disponibilidad/selector-disponibilidad";
+import { FormularioSolicitud } from "@/components/reservas/formulario-solicitud";
+import { BotonPreguntarArrendador } from "@/components/mensajeria/boton-preguntar-arrendador";
 import { DetallePublicacion } from "@/components/publicaciones/detalle-publicacion";
 import { getCurrentUser } from "@/lib/dal";
 import { obtenerPublicacion } from "@/lib/publicaciones/api";
@@ -17,6 +18,9 @@ export default async function PublicacionPage(props: PageProps<"/publicaciones/[
   const [publicacion, usuario] = await Promise.all([obtenerPublicacion(id), getCurrentUser()]);
   if (!publicacion) notFound();
   const esDueno = usuario?.id === publicacion.arrendadorId;
+  // FE-15.1: solo un arrendatario que no es el dueño puede preguntar. Botón
+  // temporal aquí hasta que exista el detalle completo de FE-12.1.
+  const puedePreguntar = usuario?.rol === "ARRENDATARIO" && !esDueno;
 
   return (
     <div className="flex flex-1 justify-center px-4 py-8">
@@ -38,9 +42,14 @@ export default async function PublicacionPage(props: PageProps<"/publicaciones/[
             Los días con solicitudes pendientes se ven libres: una solicitud no aparta fechas
             hasta que el arrendador la aprueba.
           </p>
-          {/* Quien puede reservar elige un período; el resto solo lo ve. */}
+          {/* Quien puede reservar elige un período y lo solicita; el resto solo lo ve. */}
           {usuario?.rol === "ARRENDATARIO" ? (
-            <SelectorDisponibilidad publicacionId={publicacion.id} />
+            <FormularioSolicitud
+              publicacionId={publicacion.id}
+              tarifaMonto={publicacion.tarifaMonto}
+              tarifaUnidad={publicacion.tarifaUnidad}
+              depositoMonto={publicacion.depositoMonto}
+            />
           ) : (
             <CalendarioDisponibilidad publicacionId={publicacion.id} />
           )}
@@ -52,6 +61,9 @@ export default async function PublicacionPage(props: PageProps<"/publicaciones/[
           >
             Bloquear fechas
           </Link>
+        )}
+        {puedePreguntar && usuario && (
+          <BotonPreguntarArrendador publicacionId={publicacion.id} usuarioId={usuario.id} />
         )}
         <Link href="/" className="mt-8 inline-block text-sm underline">
           Volver al inicio

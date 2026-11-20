@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as historial, POST as enviar } from "../[id]/mensajes/route";
 import { POST as abrir } from "../../reservas/[id]/conversacion/route";
+import { POST as abrirPrevia } from "../../publicaciones/[id]/conversaciones/route";
 import { getSession } from "@/lib/session";
 
 vi.mock("@/lib/session", () => ({
@@ -136,6 +137,31 @@ describe("route handlers de la conversación de la reserva", () => {
 
     expect(res.status).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("POST /publicaciones/{id}/conversaciones (FE-15.1) reenvía sin cuerpo con el token", async () => {
+    const PUBLICACION = "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a";
+    fetchMock.mockResolvedValue(json({ id: CONVERSACION }, 200));
+
+    const res = await abrirPrevia(
+      new NextRequest(
+        `http://localhost/api/publicaciones/${PUBLICACION}/conversaciones`,
+        {
+          method: "POST",
+          body: JSON.stringify({ tenantId: "otro" }),
+        },
+      ),
+      ctx(PUBLICACION),
+    );
+
+    expect(String(llamada()[0])).toBe(
+      `http://backend.test/api/v1/publicaciones/${PUBLICACION}/conversaciones`,
+    );
+    expect(llamada()[1]?.body).toBeUndefined();
+    expect(new Headers(llamada()[1]?.headers).get("Authorization")).toBe(
+      "Bearer token-123",
+    );
+    expect(res.status).toBe(200);
   });
 
   it("sin sesión responde 401 sin llamar al backend", async () => {

@@ -9,11 +9,19 @@ import {
 } from "@/lib/mensajeria/cliente";
 import { MAX_CARACTERES, type Mensaje } from "@/lib/mensajeria/tipos";
 
+/**
+ * Caracteres como los cuenta el backend (class-validator y VARCHAR de
+ * Postgres): un emoji vale 1, no 2 como en `String.length` (UTF-16).
+ */
+export function contarCaracteres(texto: string): number {
+  return Array.from(texto.trim()).length;
+}
+
 /** Lo que se le muestra al usuario si el texto no se puede enviar. */
 export function validarMensaje(texto: string): string | null {
-  const limpio = texto.trim();
-  if (limpio.length === 0) return "Escribe un mensaje.";
-  if (limpio.length > MAX_CARACTERES) {
+  const largo = contarCaracteres(texto);
+  if (largo === 0) return "Escribe un mensaje.";
+  if (largo > MAX_CARACTERES) {
     return `El mensaje no puede pasar de ${MAX_CARACTERES} caracteres.`;
   }
   return null;
@@ -90,7 +98,7 @@ export function CajaMensaje({
     }
   }
 
-  const largo = texto.trim().length;
+  const largo = contarCaracteres(texto);
   // Enviar queda deshabilitado con el texto vacío o de más (FE-15.1) y durante el envío.
   const invalido = validarMensaje(texto) !== null;
   const excedido = largo > MAX_CARACTERES;

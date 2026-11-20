@@ -6,16 +6,11 @@ Historia H05. El arrendatario paga una reserva confirmada con una tarjeta de
 prueba. No hay ninguna pasarela real: el backend (BE-05.1, MP4-65) decide el
 resultado por los últimos 4 dígitos.
 
-> ⚠️ **Pendiente antes de la entrega: los importes de la reserva son datos de
-> prueba.** `lib/pagos/reserva.ts` devuelve un alquiler y un depósito fijos
-> porque todavía no existe el endpoint que lee una reserva (BE-03.1, de
-> Mario) ni la pantalla de reservas (FE-03.1). Cuando BE-03.1 esté en `main`,
-> hay que cambiar el cuerpo de `obtenerResumenReserva(id)` por la llamada real
-> (está marcado con `TODO(BE-03.1 / FE-03.1)`). Es la única función que hay
-> que tocar.
->
-> El cobro **no** usa esos importes: el backend cobra con los de la reserva
-> guardada, y el resultado muestra el `montoTotal` que devuelve.
+Los importes que muestra el resumen de cobro son los de la reserva guardada:
+`lib/pagos/reserva.ts` los lee con `GET /reservas/{id}` (BE-03.1, ver
+[reservas](reservas.md)). El cobro **no** usa lo que se ve en pantalla: el
+backend cobra con los importes de la reserva, y el resultado muestra el
+`montoTotal` que devuelve.
 
 ### Pantalla
 
@@ -23,8 +18,8 @@ resultado por los últimos 4 dígitos.
 |---|---|---|
 | `/reservas/{id}/pago` | `ARRENDATARIO` | Resumen del cobro, formulario de tarjeta y resultado. Otro rol ve "Acceso restringido". |
 
-Mientras no exista la pantalla de reservas, no hay un enlace a esta ruta: se
-entra escribiendo la URL con el id de la reserva.
+Se llega desde el detalle de la reserva (`/reservas/{id}`), que ofrece
+«Pagar reserva» cuando está CONFIRMADA.
 
 ### Componentes
 
