@@ -42,7 +42,7 @@ Necesita el backend corriendo (ver su README).
 ```bash
 cp .env.example .env.local   # API_URL=http://localhost:3000/api/v1
 npm install
-npm run dev                  # http://localhost:3000 (o el puerto libre que indique)
+npm run dev -- -p 3001       # el backend ocupa el 3000: la app queda en http://localhost:3001
 ```
 
 | Variable | Para qué |
@@ -58,6 +58,7 @@ npm run dev                  # http://localhost:3000 (o el puerto libre que indi
 | `npm start` | Sirve el build |
 | `npm run lint` | ESLint |
 | `npm test` | Pruebas con Vitest |
+| `npm run test:watch` | Pruebas con Vitest en modo watch |
 
 ## Cómo está organizado
 
