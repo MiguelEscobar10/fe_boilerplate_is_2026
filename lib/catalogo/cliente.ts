@@ -1,5 +1,10 @@
 import { irALogin } from "@/lib/notificaciones/navegacion";
-import { POR_PAGINA, type ConsultaCatalogo, type PaginaCatalogo } from "./tipos";
+import {
+  CAMPOS_FILTRO,
+  POR_PAGINA,
+  type ConsultaCatalogo,
+  type PaginaCatalogo,
+} from "./tipos";
 
 // Llamada del navegador al route handler /api/publicaciones. Nunca va directo
 // al backend: el token está en una cookie httpOnly.
@@ -25,9 +30,16 @@ export function esAbortado(error: unknown) {
 }
 
 /** Parámetros que se mandan al backend: sin los vacíos, que son su valor por defecto. */
-export function parametrosDeConsulta({ buscar, page }: ConsultaCatalogo): URLSearchParams {
+export function parametrosDeConsulta({
+  buscar,
+  page,
+  filtros,
+}: ConsultaCatalogo): URLSearchParams {
   const query = new URLSearchParams({ page: String(page), limit: String(POR_PAGINA) });
   if (buscar) query.set("buscar", buscar);
+  for (const campo of CAMPOS_FILTRO) {
+    if (filtros[campo]) query.set(campo, filtros[campo]);
+  }
   return query;
 }
 
