@@ -7,12 +7,18 @@ import {
   esAbortado,
   obtenerCatalogo,
 } from "@/lib/catalogo/cliente";
+import { hayFiltros } from "@/lib/catalogo/filtros";
 import {
+  CAMPOS_FILTRO,
   POR_PAGINA,
+  SIN_FILTROS,
   type ConsultaCatalogo,
+  type FiltrosCatalogo as Filtros,
   type PublicacionResumen,
 } from "@/lib/catalogo/tipos";
 import { BarraBusqueda } from "./barra-busqueda";
+import { FiltrosActivos } from "./filtros-activos";
+import { FiltrosCatalogo } from "./filtros-catalogo";
 import { Paginacion } from "./paginacion";
 import { TarjetaPublicacion } from "./tarjeta-publicacion";
 
@@ -22,10 +28,13 @@ function mensajeDeError(error: unknown) {
     : "No se pudo cargar el catálogo. Inténtalo de nuevo.";
 }
 
-/** Deja la búsqueda y la página en la URL, para poder recargar o compartirla. */
-function actualizarUrl({ buscar, page }: ConsultaCatalogo) {
+/** Deja la búsqueda, los filtros y la página en la URL, para recargar o compartirla. */
+function actualizarUrl({ buscar, page, filtros }: ConsultaCatalogo) {
   const query = new URLSearchParams();
   if (buscar) query.set("buscar", buscar);
+  for (const campo of CAMPOS_FILTRO) {
+    if (filtros[campo]) query.set(campo, filtros[campo]);
+  }
   if (page > 1) query.set("page", String(page));
   const qs = query.toString();
   window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
@@ -34,16 +43,23 @@ function actualizarUrl({ buscar, page }: ConsultaCatalogo) {
 type Props = {
   buscarInicial?: string;
   paginaInicial?: number;
+  filtrosIniciales?: Filtros;
 };
 
 /**
- * Catálogo de publicaciones (H02): barra de búsqueda, tarjetas de 12 en 12 y
- * paginación. Estados: cargando, resultados, vacío y error con reintento.
+ * Catálogo de publicaciones (H02, H11): barra de búsqueda, panel de filtros,
+ * tarjetas de 12 en 12 y paginación. Estados: cargando, resultados, vacío y
+ * error con reintento.
  */
-export function ListadoCatalogo({ buscarInicial = "", paginaInicial = 1 }: Props) {
+export function ListadoCatalogo({
+  buscarInicial = "",
+  paginaInicial = 1,
+  filtrosIniciales = SIN_FILTROS,
+}: Props) {
   const [consulta, setConsulta] = useState<ConsultaCatalogo>({
     buscar: buscarInicial,
     page: paginaInicial,
+    filtros: filtrosIniciales,
   });
   // Cambia para volver a pedir la misma consulta.
   const [recarga, setRecarga] = useState(0);
@@ -70,6 +86,8 @@ export function ListadoCatalogo({ buscarInicial = "", paginaInicial = 1 }: Props
   }, [consulta, recarga]);
 
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
+  const conFiltros = hayFiltros(consulta.filtros);
+  const filtrar = (filtros: Filtros) => consultar({ ...consulta, filtros, page: 1 });
 
   function consultar(nueva: ConsultaCatalogo) {
     setCargando(true);
@@ -90,6 +108,8 @@ export function ListadoCatalogo({ buscarInicial = "", paginaInicial = 1 }: Props
         valor={consulta.buscar}
         onBuscar={(buscar) => consultar({ ...consulta, buscar, page: 1 })}
       />
+      <FiltrosCatalogo filtros={consulta.filtros} onAplicar={filtrar} cargando={cargando} />
+      <FiltrosActivos filtros={consulta.filtros} onCambiar={filtrar} />
 
       {cargando ? (
         <p role="status" className="py-8 text-center text-sm text-zinc-600 dark:text-zinc-400">
@@ -109,19 +129,34 @@ export function ListadoCatalogo({ buscarInicial = "", paginaInicial = 1 }: Props
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-zinc-300 px-4 py-8 text-center dark:border-zinc-700">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {consulta.buscar
-              ? `No encontramos publicaciones para «${consulta.buscar}». Prueba con otra palabra o borra la búsqueda.`
-              : "Todavía no hay publicaciones disponibles."}
+            {consulta.buscar && conFiltros
+              ? `No encontramos publicaciones para «${consulta.buscar}» con estos filtros. Prueba con otra palabra o limpia los filtros.`
+              : consulta.buscar
+                ? `No encontramos publicaciones para «${consulta.buscar}». Prueba con otra palabra o borra la búsqueda.`
+                : conFiltros
+                  ? "Ninguna publicación cumple estos filtros. Cambia alguno o límpialos."
+                  : "Todavía no hay publicaciones disponibles."}
           </p>
-          {consulta.buscar && (
-            <button
-              type="button"
-              onClick={() => consultar({ ...consulta, buscar: "", page: 1 })}
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700"
-            >
-              Ver todas las publicaciones
-            </button>
-          )}
+          <div className="flex flex-wrap justify-center gap-2">
+            {conFiltros && (
+              <button
+                type="button"
+                onClick={() => filtrar(SIN_FILTROS)}
+                className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700"
+              >
+                Limpiar filtros
+              </button>
+            )}
+            {consulta.buscar && (
+              <button
+                type="button"
+                onClick={() => consultar({ ...consulta, buscar: "", page: 1 })}
+                className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700"
+              >
+                Ver todas las publicaciones
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <>
