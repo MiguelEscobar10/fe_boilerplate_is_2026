@@ -45,3 +45,18 @@ export type ResumenReserva = {
 export function intentosRestantes(intento: number) {
   return Math.max(0, MAX_INTENTOS - intento);
 }
+
+/** Respuesta 200 de GET /reservas/{id}/pagos/ultimo (BE-06.1 / MP4-69). */
+export type UltimoPago = {
+  pagoId: string;
+  reservaId: string;
+  /** Alquiler + depósito. String con 2 decimales. */
+  montoTotal: string;
+  /** Fecha del intento, ISO 8601 en UTC. */
+  fechaRegistro: string;
+  /** PENDIENTE solo mientras la pasarela espera su respuesta. */
+  estado: "PENDIENTE" | "APROBADO" | "RECHAZADO";
+  simulado: true;
+  /** Solo si es RECHAZADO. */
+  motivo?: string;
+};
