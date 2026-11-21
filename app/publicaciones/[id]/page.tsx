@@ -4,6 +4,8 @@ import { CalendarioDisponibilidad } from "@/components/disponibilidad/calendario
 import { FormularioSolicitud } from "@/components/reservas/formulario-solicitud";
 import { BotonPreguntarArrendador } from "@/components/mensajeria/boton-preguntar-arrendador";
 import { DetallePublicacionCompleto } from "@/components/publicaciones/detalle-publicacion-completo";
+import { InsigneVerificacionRequerida } from "@/components/verificacion/insigne-verificacion-requerida";
+import { InterruptorRequiereVerificacion } from "@/components/verificacion/interruptor-requiere-verificacion";
 import { getCurrentUser } from "@/lib/dal";
 import { obtenerPublicacion } from "@/lib/publicaciones/api";
 
@@ -50,6 +52,12 @@ export default async function PublicacionPage(props: PageProps<"/publicaciones/[
           </p>
         )}
         <DetallePublicacionCompleto publicacion={publicacion} />
+        {/* H19 (FE-19.1): se avisa antes de reservar, no al fallar la solicitud. */}
+        {publicacion.requiereVerificacion && (
+          <p className="mt-3">
+            <InsigneVerificacionRequerida requiereVerificacion />
+          </p>
+        )}
         <section aria-labelledby="titulo-disponibilidad" className="mt-8 flex max-w-sm flex-col gap-2">
           <h2 id="titulo-disponibilidad" className="text-lg font-semibold">
             Disponibilidad
@@ -72,12 +80,22 @@ export default async function PublicacionPage(props: PageProps<"/publicaciones/[
           )}
         </section>
         {esDueno && (
-          <Link
-            href={`/arrendador/publicaciones/${publicacion.id}/bloqueos`}
-            className="mt-6 inline-block rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium dark:border-zinc-700"
-          >
-            Bloquear fechas
-          </Link>
+          <section aria-labelledby="titulo-gestion" className="mt-8 flex flex-col items-start gap-4">
+            <h2 id="titulo-gestion" className="text-lg font-semibold">
+              Gestión de la publicación
+            </h2>
+            {/* H19 (FE-19.1): el dueño exige verificación de identidad para reservar. */}
+            <InterruptorRequiereVerificacion
+              publicacionId={publicacion.id}
+              valorInicial={publicacion.requiereVerificacion ?? false}
+            />
+            <Link
+              href={`/arrendador/publicaciones/${publicacion.id}/bloqueos`}
+              className="inline-block rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium dark:border-zinc-700"
+            >
+              Bloquear fechas
+            </Link>
+          </section>
         )}
         {puedePreguntar && usuario && (
           <BotonPreguntarArrendador publicacionId={publicacion.id} usuarioId={usuario.id} />
