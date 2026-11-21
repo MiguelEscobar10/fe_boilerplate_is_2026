@@ -7,6 +7,16 @@ busque, reserve, pague (simulado), coordine la entrega y califique.
 - **Backend:** [be_boilerplate_is_2026](https://github.com/MiguelEscobar10/be_boilerplate_is_2026). Ahí están la arquitectura, el modelo de datos, el resumen de endpoints y la evidencia de QA (`docs/`).
 - **Documentación del frontend:** [`docs/`](docs/), con un documento por pantalla y la [decisión de manejo de estado](docs/decisiones/manejo-de-estado.md).
 
+## Demo publicada
+
+| Qué | URL |
+|---|---|
+| Frontend | https://mp4-frontend.onrender.com |
+| API | https://mp4-backend-4ua0.onrender.com/api/v1 |
+| Swagger | https://mp4-backend-4ua0.onrender.com/api/docs |
+
+Corre en Render con el plan gratis: si nadie la usó hace rato, la primera visita puede tardar cerca de un minuto en responder. Cómo está desplegada: [`docs/06-despliegue.md` del backend](https://github.com/MiguelEscobar10/be_boilerplate_is_2026/blob/main/docs/06-despliegue.md).
+
 ## Integrantes
 
 Cada historia tiene un dueño que hace sus cuatro tareas: base de datos,
