@@ -21,12 +21,11 @@ ve un ARRENDATARIO que no es el dueño.
   disponible". Un error de red deja "Reintentar", tanto al abrir como al
   cargar el historial.
 
-### Botón temporal
+### Dónde está el botón
 
-La ficha pone el botón en `DetallePublicacionCompleto` de FE-12.1 (Elias), que
-todavía no existe. Para no atrasar H15 va por ahora en el detalle actual
-(acordado en MP4-38). Cuando entre FE-12.1 se mueve el componente tal cual y
-se quitan estas líneas de `app/publicaciones/[id]/page.tsx`.
+En la página del detalle completo de FE-12.1 (`app/publicaciones/[id]/page.tsx`),
+debajo de `DetallePublicacionCompleto`. Se queda en la página y no dentro del
+componente porque necesita el usuario de la sesión, que solo conoce la página.
 
 ### Pruebas
 

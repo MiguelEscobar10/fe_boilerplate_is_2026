@@ -19,7 +19,8 @@ espacio".
   unidad de cobro, depósito, condiciones y fotos.
 - `CargaImagenes`: selector de fotos con vista previa; la primera es la
   portada.
-- `DetallePublicacion`: muestra lo que devuelve `GET /publicaciones/{id}`.
+- `DetallePublicacionCompleto` (FE-12.1, abajo): muestra lo que devuelve
+  `GET /publicaciones/{id}`.
 
 ### Validación
 
@@ -75,3 +76,61 @@ Con el backend de la rama de BE-01.1 y un navegador headless:
 - Con 201 se ve el detalle con la tarifa `$15.50 por día`, el depósito y las
   dos fotos cargadas.
 - Una cuenta de arrendatario ve "Acceso restringido" en `/publicaciones/nueva`.
+
+## FE-12.1. Vista de detalle completo (MP4-38)
+
+El arrendatario ve todo lo que necesita antes de reservar (H12): fotos,
+descripción, ubicación, tarifa con su unidad, depósito, condiciones y los
+promedios de calificaciones. Consume `GET /publicaciones/{id}` de BE-12.1.
+
+### Pantalla
+
+Es la misma ruta, `/publicaciones/{id}`. Se llega desde las tarjetas del
+catálogo (FE-02.1) y tiene el enlace "Volver al catálogo".
+
+- **Publicación desactivada o inexistente** (404 `PUBLICACION_NO_DISPONIBLE`):
+  muestra "Publicación no disponible" y el botón "Volver al catálogo", en vez
+  de la página 404 genérica.
+- Debajo del detalle siguen la disponibilidad con el formulario de solicitud
+  (FE-03.1), "Bloquear fechas" para el dueño (FE-14.1) y "Contactar al
+  arrendador" (FE-15.1).
+
+### Componentes (`components/publicaciones/`)
+
+- `DetallePublicacionCompleto`: arma la vista. Reemplaza a `DetallePublicacion`.
+- `GaleriaFotos`: una foto grande y las demás como miniaturas para elegir. Con
+  una sola foto no hay miniaturas; sin fotos dice "Sin fotografías".
+- `PromedioCalificacion`: "★ 4.5 de 5 (6 calificaciones)" para el bien y
+  "★ 4.8 de 5" para el arrendador, o "Sin calificaciones".
+- `BloqueTarifaDeposito`: "$15.00 por hora" y el depósito, o "No pide
+  depósito".
+- `BloqueCondiciones`: las condiciones de uso y el depósito.
+
+### Condiciones y depósito en el formulario de solicitud
+
+`FormularioSolicitud` (FE-03.1) recibe `condiciones` y muestra
+`BloqueCondiciones` justo antes del botón "Solicitar reserva", para que se
+lean antes de enviar (H12, criterio 2).
+
+### Decisiones
+
+- **El arrendador puede tener promedio aunque la publicación no tenga
+  calificaciones**, porque su promedio junta todas sus publicaciones. En ese
+  caso el bien dice "Sin calificaciones" y el arrendador muestra su promedio.
+- **Los campos nuevos del tipo `Publicacion` son opcionales**
+  (`promedioBien`, `promedioArrendador`, `totalCalificaciones`,
+  `requiereVerificacion`). Si el backend todavía no los envía, la vista
+  muestra "Sin calificaciones" en vez de fallar.
+- **La tarifa y el depósito se leen de `tarifaMonto`, `tarifaUnidad` y
+  `depositoMonto`**, que el backend conserva, así el formulario de solicitud y
+  el detalle usan el mismo dato.
+- **`requiereVerificacion` queda en el tipo pero no se muestra aquí**: la
+  insignia y el interruptor son de FE-19.1 (Ricardo), que ya tiene los
+  componentes.
+
+### Pruebas
+
+`components/publicaciones/__tests__/detalle-completo.test.tsx` (10 pruebas):
+todos los datos del detalle, la galería, sin fotos, sin calificaciones, sin
+descripción ni condiciones ni depósito, promedio solo del arrendador, y el
+bloque de condiciones dentro del formulario, antes del botón.

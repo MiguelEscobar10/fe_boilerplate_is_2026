@@ -17,6 +17,14 @@ export type Publicacion = {
   condiciones: string | null;
   createdAt: string;
   imagenes: { orden: number; url: string }[];
+  // Detalle completo (BE-12.1). Opcionales por si el backend aún no los envía.
+  /** Promedio de las calificaciones de esta publicación; null si no tiene. */
+  promedioBien?: number | null;
+  /** Promedio del arrendador en todas sus publicaciones; null si no tiene. */
+  promedioArrendador?: number | null;
+  totalCalificaciones?: number;
+  /** Solo la pueden solicitar arrendatarios con identidad verificada (H19). */
+  requiereVerificacion?: boolean;
 };
 
 /** GET /publicaciones/{id}. Devuelve null si no existe o está desactivada. */

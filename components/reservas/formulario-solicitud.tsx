@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { AvisoVerificacionRequerida } from "@/components/verificacion/aviso-verificacion-requerida";
 import type { PeriodoElegido } from "@/components/disponibilidad/selector-disponibilidad";
+import { BloqueCondiciones } from "@/components/publicaciones/bloque-condiciones";
 import { formatearMonto } from "@/lib/pagos/montos";
 import { costoEstimado, NOMBRE_UNIDAD, unidadesDeCobro } from "@/lib/reservas/costo";
 import {
@@ -34,6 +35,8 @@ type Props = {
   tarifaMonto: string;
   tarifaUnidad: UnidadTarifa;
   depositoMonto: string;
+  /** Condiciones de uso de la publicación (H12); null si no tiene. */
+  condiciones?: string | null;
 };
 
 type Fallo =
@@ -84,6 +87,7 @@ export function FormularioSolicitud({
   tarifaMonto,
   tarifaUnidad,
   depositoMonto,
+  condiciones = null,
 }: Props) {
   const [dias, setDias] = useState<PeriodoElegido | null>(null);
   const [horaInicio, setHoraInicio] = useState(HORA_INICIO_POR_DEFECTO);
@@ -204,6 +208,9 @@ export function FormularioSolicitud({
           {fallo.mensaje}
         </p>
       )}
+
+      {/* H12: las condiciones y el depósito se leen antes de pulsar el botón. */}
+      <BloqueCondiciones condiciones={condiciones} depositoMonto={depositoMonto} />
 
       <p className="text-xs text-zinc-600 dark:text-zinc-400">
         Al enviar, tu solicitud queda <strong>pendiente</strong> hasta que el arrendador la
