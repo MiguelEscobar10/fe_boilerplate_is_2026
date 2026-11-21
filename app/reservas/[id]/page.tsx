@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { SeccionCalificacion } from "@/components/calificaciones/seccion-calificacion";
 import { EstadoPago } from "@/components/pagos/estado-pago";
 import { EstadoReserva } from "@/components/reservas/estado-reserva";
 import { ResumenReserva } from "@/components/reservas/resumen-reserva";
@@ -53,6 +54,9 @@ async function ContenidoReserva({ id }: { id: string }) {
           deposito={reserva.depositoMonto}
         />
         {esArrendatario && <EstadoPago reservaId={reserva.id} />}
+        {esArrendatario && reserva.estado === "COMPLETADA" && (
+          <SeccionCalificacion reservaId={reserva.id} nombreBien={reserva.publicacion.nombre} />
+        )}
         {esArrendatario && reserva.estado === "CONFIRMADA" && (
           <Link
             href={`/reservas/${encodeURIComponent(reserva.id)}/pago`}
