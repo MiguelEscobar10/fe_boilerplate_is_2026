@@ -1,7 +1,7 @@
-// Plan de pruebas de H10 (MP4-28). Los números de criterio son los de Jira.
-// En la UI se prueba que la bandeja muestra los avisos que manda el backend
-// (AC1, AC3, AC4), el contador (AC7) y la notificación ajena (AC8). Qué avisos
-// se generan y para quién lo decide el backend (BE-10.2).
+// Plan de pruebas de H10 (MP4-28). Los números de criterio son los del plan
+// de pruebas. En la UI se prueba que la bandeja muestra los avisos que manda
+// el backend (AC1, AC5, AC6), la notificación ajena (AC4) y el contador (AC8).
+// Qué avisos se generan y para quién lo decide el backend (BE-10.2).
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -68,7 +68,46 @@ describe("H10. Consultar notificaciones de mi alquiler", () => {
     );
   });
 
-  it("AC3: el arrendador ve el aviso de solicitud nueva", async () => {
+  it("AC4: una notificación ajena (404 al marcarla) no se marca y sale de la lista", async () => {
+    const ajena = crearNotificacion({ titulo: "Aviso ajeno" });
+    const propia = crearNotificacion({ titulo: "Aviso propio" });
+    const api = simularApi({
+      conteo: conteos(2, 1),
+      lista: () => json(bandeja([ajena, propia])),
+      marcar: () => json({ statusCode: 404, message: "La notificación no existe." }, 404),
+    });
+    render(<IconoNotificaciones />);
+    const user = await abrirBandeja();
+    await screen.findByText("Aviso ajeno");
+
+    await user.click(within(itemDe("Aviso ajeno")).getByRole("button", { name: "Marcar como leída" }));
+
+    expect(
+      await screen.findByText("Esa notificación ya no está disponible y se quitó de la lista."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Aviso ajeno")).not.toBeInTheDocument();
+    expect(itemDe("Aviso propio")).toHaveAttribute("data-estado", "pendiente");
+    expect(api.llamadasMarcar(ajena.id)).toBe(1);
+  });
+
+  it("AC4: tras el 404 vuelve a pedir el conteo y no cuenta la notificación ajena", async () => {
+    const api = simularApi({
+      conteo: conteos(2, 1),
+      lista: () => json(bandeja([crearNotificacion({ titulo: "Aviso ajeno" })])),
+      marcar: () => json({ statusCode: 404, message: "La notificación no existe." }, 404),
+    });
+    render(<IconoNotificaciones />);
+    expect(await screen.findByTestId("contador-no-leidas")).toHaveTextContent("2");
+    const user = await abrirBandeja();
+    await screen.findByText("Aviso ajeno");
+
+    await user.click(within(itemDe("Aviso ajeno")).getByRole("button", { name: "Marcar como leída" }));
+
+    expect(await screen.findByTestId("contador-no-leidas")).toHaveTextContent("1");
+    expect(api.llamadasConteo()).toBe(2);
+  });
+
+  it("AC5: el arrendador ve el aviso de solicitud nueva", async () => {
     await verAviso(
       crearNotificacion({
         moduloOrigen: "RESERVAS",
@@ -79,7 +118,7 @@ describe("H10. Consultar notificaciones de mi alquiler", () => {
     );
   });
 
-  it("AC4: el arrendador ve el aviso de pago confirmado", async () => {
+  it("AC6: el arrendador ve el aviso de pago confirmado", async () => {
     await verAviso(
       crearNotificacion({
         moduloOrigen: "PAGOS_GARANTIA",
@@ -90,7 +129,7 @@ describe("H10. Consultar notificaciones de mi alquiler", () => {
     );
   });
 
-  it("AC7: muestra el contador de no leídas y lo actualiza solo cada 30 segundos", async () => {
+  it("AC8: muestra el contador de no leídas y lo actualiza solo cada 30 segundos", async () => {
     const api = simularApi({ conteo: conteos(3, 5) });
     render(<IconoNotificaciones />);
 
@@ -105,7 +144,7 @@ describe("H10. Consultar notificaciones de mi alquiler", () => {
     expect(await screen.findByTestId("contador-no-leidas")).toHaveTextContent("5");
   });
 
-  it("AC7: el botón Actualizar pide el conteo al momento y reinicia los 30 segundos", async () => {
+  it("AC8: el botón Actualizar pide el conteo al momento y reinicia los 30 segundos", async () => {
     const api = simularApi({ conteo: conteos(2, 7), lista: () => json(bandeja([])) });
     render(<IconoNotificaciones />);
     expect(await screen.findByTestId("contador-no-leidas")).toHaveTextContent("2");
@@ -125,7 +164,7 @@ describe("H10. Consultar notificaciones de mi alquiler", () => {
     expect(api.llamadasConteo()).toBe(3);
   });
 
-  it("AC7: al salir de la pantalla se detiene el temporizador", async () => {
+  it("AC8: al salir de la pantalla se detiene el temporizador", async () => {
     const api = simularApi({ conteo: conteos(1) });
     const { unmount } = render(<IconoNotificaciones />);
     await screen.findByTestId("contador-no-leidas");
@@ -135,43 +174,6 @@ describe("H10. Consultar notificaciones de mi alquiler", () => {
 
     expect(api.llamadasConteo()).toBe(1);
     expect(vi.getTimerCount()).toBe(0);
-  });
-
-  it("AC8: una notificación ajena (404 al marcarla) no se marca y desaparece de la lista", async () => {
-    const ajena = crearNotificacion({ titulo: "Aviso ajeno" });
-    const api = simularApi({
-      conteo: conteos(1, 0),
-      lista: () => json(bandeja([ajena])),
-      marcar: () => json({ statusCode: 404, message: "La notificación no existe." }, 404),
-    });
-    render(<IconoNotificaciones />);
-    const user = await abrirBandeja();
-    await screen.findByText("Aviso ajeno");
-
-    await user.click(within(itemDe("Aviso ajeno")).getByRole("button", { name: "Marcar como leída" }));
-
-    await screen.findByText(/ya no está disponible/i);
-    expect(screen.queryByText("Aviso ajeno")).not.toBeInTheDocument();
-    expect(api.llamadasMarcar(ajena.id)).toBe(1);
-  });
-
-  // DEFECTO (H10-AC8): el criterio pide el texto «Notificación no
-  // encontrada»; la UI muestra «Esa notificación ya no está disponible y se
-  // quitó de la lista.» (components/notificaciones/bandeja-notificaciones.tsx).
-  // Cuando se corrija, esta prueba fallará: quitar `.fails`.
-  it.fails("AC8: al intentar marcar una notificación ajena muestra «Notificación no encontrada»", async () => {
-    simularApi({
-      conteo: conteos(1),
-      lista: () => json(bandeja([crearNotificacion({ titulo: "Aviso ajeno" })])),
-      marcar: () => json({ statusCode: 404, message: "La notificación no existe." }, 404),
-    });
-    render(<IconoNotificaciones />);
-    const user = await abrirBandeja();
-    await screen.findByText("Aviso ajeno");
-
-    await user.click(within(itemDe("Aviso ajeno")).getByRole("button", { name: "Marcar como leída" }));
-
-    expect(await screen.findByText(/Notificación no encontrada/, {}, { timeout: 1500 })).toBeInTheDocument();
   });
 
   it("Negativo: si falla la red en un tick, el contador conserva el último valor", async () => {
