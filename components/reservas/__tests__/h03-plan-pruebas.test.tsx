@@ -3,7 +3,7 @@
  * interfaz. Un `it('ACn: ...')` por criterio que se ve en pantalla y, al
  * final, los casos negativos.
  *
- * AC7 (el aviso «Nueva solicitud de reserva» al arrendador) lo genera y lo
+ * AC6 (el aviso «Nueva solicitud de reserva» al arrendador) lo genera y lo
  * guarda el backend; la interfaz del arrendatario no lo muestra, así que se
  * prueba en test/qa/qa-03.1-solicitudes.e2e-spec.ts del backend (caso S18).
  */
@@ -163,7 +163,7 @@ describe("H03. Solicitar una reserva (interfaz)", () => {
     expect(screen.queryByTestId("solicitud-enviada")).not.toBeInTheDocument();
   });
 
-  it("AC4: con un inicio que ya pasó no deja enviar y explica el motivo", async () => {
+  it("AC5: con un inicio que ya pasó no deja enviar y explica el motivo", async () => {
     const { envios } = simularBackend();
     const user = userEvent.setup();
     formulario();
@@ -174,7 +174,7 @@ describe("H03. Solicitar una reserva (interfaz)", () => {
     expect(envios).toHaveLength(0);
   });
 
-  it("AC4 (servidor): un 400 FECHA_PASADA explica que el inicio ya pasó", async () => {
+  it("AC5 (servidor): un 400 FECHA_PASADA explica que el inicio ya pasó", async () => {
     simularBackend(() =>
       json({ statusCode: 400, codigo: "FECHA_PASADA", message: "La fecha de inicio ya pasó." }, 400),
     );
@@ -188,7 +188,7 @@ describe("H03. Solicitar una reserva (interfaz)", () => {
     expect(screen.queryByTestId("solicitud-enviada")).not.toBeInTheDocument();
   });
 
-  it("AC5: con fechas que chocan se avisa que el período no está disponible y no se confirma nada", async () => {
+  it("AC4: con fechas que chocan se avisa que el período no está disponible y no se confirma nada", async () => {
     simularBackend(() =>
       json({ statusCode: 409, codigo: "PERIODO_NO_DISPONIBLE", message: "ocupado" }, 409),
     );
@@ -202,7 +202,7 @@ describe("H03. Solicitar una reserva (interfaz)", () => {
     expect(screen.queryByTestId("solicitud-enviada")).not.toBeInTheDocument();
   });
 
-  it("AC6: si la publicación pide verificación y no la tengo, se ve el motivo y el acceso a verificarme", async () => {
+  it("AC7: si la publicación pide verificación y no la tengo, se ve el motivo y el acceso a verificarme", async () => {
     simularBackend(() =>
       json(
         {

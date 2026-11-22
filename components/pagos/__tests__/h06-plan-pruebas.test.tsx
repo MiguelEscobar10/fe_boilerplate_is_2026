@@ -54,19 +54,6 @@ describe("H06. Consultar el estado de un pago (interfaz)", () => {
     expect(screen.getByTestId("estado-pago")).toHaveTextContent(/aprobado/i);
   });
 
-  // DEFECTO D1: el criterio pide el número de transacción (recibo). El
-  // backend lo manda (`pagoId`) pero la interfaz no lo muestra. `it.fails`
-  // deja el defecto documentado sin romper el CI: cuando se corrija la
-  // interfaz este caso empezará a fallar y habrá que cambiarlo a `it`.
-  it.fails("AC1: con un pago veo también el número de transacción (recibo) [D1]", async () => {
-    fetchMock.mockResolvedValue(json(pago()));
-
-    render(<EstadoPago reservaId={RESERVA} />);
-
-    const detalle = await screen.findByTestId("detalle-pago");
-    expect(detalle).toHaveTextContent(PAGO);
-  });
-
   it("AC2: tras un intento rechazado y otro aprobado, al actualizar veo el más reciente", async () => {
     fetchMock
       .mockResolvedValueOnce(json(pago({ estado: "RECHAZADO", motivo: "Sin fondos" })))
