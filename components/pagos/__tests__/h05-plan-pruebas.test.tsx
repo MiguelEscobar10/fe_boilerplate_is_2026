@@ -1,7 +1,7 @@
-// Plan de pruebas de H05 (MP4-18). Los números de criterio son los de Jira.
-// Solo se cubren los criterios que se ven en la UI; la persistencia, los
-// avisos (AC8) y la cancelación por falta de pago (AC9) se prueban en el
-// backend.
+// Plan de pruebas de H05 (MP4-18). Los números de criterio son los del plan
+// de pruebas. Solo se cubren los criterios que se ven en la UI; la
+// persistencia, los avisos y la cancelación por falta de pago se prueban en
+// el backend.
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement, ReactNode } from "react";
@@ -176,84 +176,7 @@ describe("H05. Realizar un pago simulado", () => {
     expect(screen.queryByRole("button", { name: "Pagar" })).not.toBeInTheDocument();
   });
 
-  it("AC5: un doble clic en Pagar registra una sola petición", async () => {
-    let responder!: (r: Response) => void;
-    fetchMock.mockReturnValue(new Promise((resolve) => (responder = resolve)));
-    const user = renderizar();
-
-    await llenar(user);
-    await user.dblClick(botonPagar());
-
-    expect(botonPagar()).toBeDisabled();
-    responder(json(pago(), 201));
-    expect(await screen.findByText("Pago aprobado")).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-  });
-
-  it("AC5: con el pago APROBADO ya no se puede volver a pagar", async () => {
-    fetchMock.mockResolvedValue(json(pago(), 201));
-    const user = renderizar();
-
-    await llenar(user);
-    await user.click(botonPagar());
-
-    await screen.findByText("Pago aprobado");
-    expect(screen.queryByRole("button", { name: "Pagar" })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Número de tarjeta")).not.toBeInTheDocument();
-  });
-
-  it("AC5: si el backend responde PAGO_YA_APROBADO, no muestra el formulario otra vez", async () => {
-    fetchMock.mockResolvedValue(errorConCodigo(409, "PAGO_YA_APROBADO"));
-    const user = renderizar();
-
-    await llenar(user);
-    await user.click(botonPagar());
-
-    expect(await screen.findByTestId("resultado-pago")).toHaveTextContent(/ya tiene un pago aprobado/i);
-    expect(screen.queryByRole("button", { name: "Pagar" })).not.toBeInTheDocument();
-  });
-
-  it("AC6: después del tercer rechazo no ofrece un cuarto intento", async () => {
-    fetchMock.mockResolvedValue(json(rechazo(3), 201));
-    const user = renderizar();
-
-    await llenar(user, RECHAZA);
-    await user.click(botonPagar());
-
-    expect(await screen.findByTestId("intentos-restantes")).toHaveTextContent(
-      "Ya no te quedan intentos de pago para esta reserva.",
-    );
-    expect(screen.queryByRole("button", { name: "Pagar" })).not.toBeInTheDocument();
-  });
-
-  it("AC6: si el backend responde INTENTOS_AGOTADOS, bloquea el pago", async () => {
-    fetchMock.mockResolvedValue(errorConCodigo(409, "INTENTOS_AGOTADOS"));
-    const user = renderizar();
-
-    await llenar(user);
-    await user.click(botonPagar());
-
-    expect(await screen.findByTestId("resultado-pago")).toHaveTextContent(/3 intentos/);
-    expect(screen.queryByRole("button", { name: "Pagar" })).not.toBeInTheDocument();
-  });
-
-  // DEFECTO (H05-AC6): el criterio pide el texto «Se alcanzó el máximo de 3
-  // intentos de pago»; la UI muestra «Ya usaste los 3 intentos de pago de esta
-  // reserva. El cobro sigue pendiente.» (lib/pagos/errores.ts). Cuando se
-  // corrija, esta prueba fallará: quitar `.fails`.
-  it.fails("AC6: al intentar un cuarto pago muestra «Se alcanzó el máximo de 3 intentos de pago»", async () => {
-    fetchMock.mockResolvedValue(errorConCodigo(409, "INTENTOS_AGOTADOS"));
-    const user = renderizar();
-
-    await llenar(user);
-    await user.click(botonPagar());
-
-    expect(await screen.findByTestId("resultado-pago")).toHaveTextContent(
-      "Se alcanzó el máximo de 3 intentos de pago",
-    );
-  });
-
-  it("AC7: el aviso de que no hay cargos reales se ve antes, durante y después del pago", async () => {
+  it("AC5: el aviso de que no hay cargos reales se ve antes, durante y después del pago", async () => {
     let responder!: (r: Response) => void;
     fetchMock
       .mockReturnValueOnce(new Promise((resolve) => (responder = resolve)))
@@ -273,6 +196,82 @@ describe("H05. Realizar un pago simulado", () => {
     await user.click(botonPagar());
     await screen.findByText("No se pudo completar el pago");
     expect(screen.getByRole("note")).toHaveTextContent(AVISO);
+  });
+
+  it("AC6: un doble clic en Pagar registra una sola petición", async () => {
+    let responder!: (r: Response) => void;
+    fetchMock.mockReturnValue(new Promise((resolve) => (responder = resolve)));
+    const user = renderizar();
+
+    await llenar(user);
+    await user.dblClick(botonPagar());
+
+    expect(botonPagar()).toBeDisabled();
+    responder(json(pago(), 201));
+    expect(await screen.findByText("Pago aprobado")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("AC6: con el pago APROBADO ya no se puede volver a pagar", async () => {
+    fetchMock.mockResolvedValue(json(pago(), 201));
+    const user = renderizar();
+
+    await llenar(user);
+    await user.click(botonPagar());
+
+    await screen.findByText("Pago aprobado");
+    expect(screen.queryByRole("button", { name: "Pagar" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Número de tarjeta")).not.toBeInTheDocument();
+  });
+
+  it("AC6: si el backend responde PAGO_YA_APROBADO, no muestra el formulario otra vez", async () => {
+    fetchMock.mockResolvedValue(errorConCodigo(409, "PAGO_YA_APROBADO"));
+    const user = renderizar();
+
+    await llenar(user);
+    await user.click(botonPagar());
+
+    expect(await screen.findByTestId("resultado-pago")).toHaveTextContent(/ya tiene un pago aprobado/i);
+    expect(screen.queryByRole("button", { name: "Pagar" })).not.toBeInTheDocument();
+  });
+
+  it("AC7: después del tercer rechazo no ofrece un cuarto intento", async () => {
+    fetchMock.mockResolvedValue(json(rechazo(3), 201));
+    const user = renderizar();
+
+    await llenar(user, RECHAZA);
+    await user.click(botonPagar());
+
+    expect(await screen.findByTestId("intentos-restantes")).toHaveTextContent(
+      "Ya no te quedan intentos de pago para esta reserva.",
+    );
+    expect(screen.queryByRole("button", { name: "Pagar" })).not.toBeInTheDocument();
+  });
+
+  it("AC7: si el backend responde INTENTOS_AGOTADOS, bloquea el pago", async () => {
+    fetchMock.mockResolvedValue(errorConCodigo(409, "INTENTOS_AGOTADOS"));
+    const user = renderizar();
+
+    await llenar(user);
+    await user.click(botonPagar());
+
+    expect(await screen.findByTestId("resultado-pago")).toHaveTextContent(/3 intentos/);
+    expect(screen.queryByRole("button", { name: "Pagar" })).not.toBeInTheDocument();
+  });
+
+  it("AC7: al intentar un cuarto pago muestra el motivo del bloqueo", async () => {
+    fetchMock.mockResolvedValue(errorConCodigo(409, "INTENTOS_AGOTADOS"));
+    const user = renderizar();
+
+    await llenar(user);
+    await user.click(botonPagar());
+
+    const resultado = await screen.findByTestId("resultado-pago");
+    expect(resultado).toHaveAttribute("role", "alert");
+    expect(resultado).toHaveTextContent(
+      "Ya usaste los 3 intentos de pago de esta reserva. El cobro sigue pendiente.",
+    );
+    expect(resultado).not.toHaveTextContent("mensaje del backend");
   });
 
   it("Negativo: una tarjeta que no es de prueba no se envía y se marca el campo", async () => {
