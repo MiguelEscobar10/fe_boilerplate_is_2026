@@ -1,4 +1,4 @@
-// Plan de pruebas de H21 (MP4-30). Los números de criterio son los de Jira.
+// Plan de pruebas de H21 (MP4-30). Los números de criterio son los del plan.
 // El cálculo (AC2) y el filtro por arrendador (AC5) los hace el backend; aquí
 // se prueba lo que le toca a la UI: mostrar el total tal cual y no mandar más
 // que el rango.
@@ -164,16 +164,25 @@ describe("H21. Ver los ingresos del arrendador", () => {
     expect(api.fetchMock).not.toHaveBeenCalled();
   });
 
-  // DEFECTO (H21-AC6): el criterio pide el texto «Acceso restringido: este
-  // reporte es solo para arrendadores»; la UI muestra «Acceso restringido» y
-  // «Tu cuenta no tiene permiso para ver esta página.» (RutaProtegida).
-  // Cuando se corrija, esta prueba fallará: quitar `.fails`.
-  it.fails("AC6: un arrendatario ve «Acceso restringido: este reporte es solo para arrendadores»", async () => {
+  it("AC6: un arrendatario ve «Acceso restringido» y el motivo, sin el selector ni el panel", async () => {
     simularApi();
 
     await renderPagina("ARRENDATARIO");
 
-    expect(document.body).toHaveTextContent("Acceso restringido: este reporte es solo para arrendadores");
+    expect(screen.getByRole("heading", { level: 1, name: "Acceso restringido" })).toBeInTheDocument();
+    expect(screen.getByText("Tu cuenta no tiene permiso para ver esta página.")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Reporte de ingresos" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Desde")).not.toBeInTheDocument();
+  });
+
+  it("AC6: un arrendador sí ve el reporte (control)", async () => {
+    simularApi();
+
+    await renderPagina("ARRENDADOR");
+
+    expect(screen.getByRole("heading", { name: "Reporte de ingresos" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Acceso restringido" })).not.toBeInTheDocument();
+    expect(await screen.findByTestId("total-ingresos")).toHaveTextContent("$30.50");
   });
 
   it("Negativo: «Desde» posterior a «Hasta» muestra el error y no consulta", async () => {
