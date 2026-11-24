@@ -94,7 +94,7 @@ export function IconoNotificaciones() {
         {noLeidas !== null && noLeidas > 0 && (
           <span
             data-testid="contador-no-leidas"
-            className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-semibold text-white"
+            className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1 text-xs font-semibold text-white"
           >
             {noLeidas > 99 ? "99+" : noLeidas}
           </span>

@@ -15,7 +15,7 @@ export function ResultadoPago({ resultado }: { resultado: Resultado }) {
       <div
         role="status"
         data-testid="resultado-pago"
-        className="rounded-lg border border-green-300 bg-green-50 p-4 text-sm text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100"
+        className="rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 p-4 text-sm"
       >
         <p className="mb-1 text-base font-semibold">Pago aprobado</p>
         <p>
@@ -33,7 +33,7 @@ export function ResultadoPago({ resultado }: { resultado: Resultado }) {
       <div
         role="alert"
         data-testid="resultado-pago"
-        className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100"
+        className="rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 p-4 text-sm"
       >
         <p className="mb-1 text-base font-semibold">Pago rechazado</p>
         <p>
@@ -53,7 +53,7 @@ export function ResultadoPago({ resultado }: { resultado: Resultado }) {
     <div
       role="alert"
       data-testid="resultado-pago"
-      className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-100"
+      className="rounded-lg border border-red-200 bg-transparent text-red-700 dark:border-red-900 dark:text-red-400 p-4 text-sm"
     >
       <p className="mb-1 text-base font-semibold">No se pudo completar el pago</p>
       <p>{resultado.error.mensaje}</p>

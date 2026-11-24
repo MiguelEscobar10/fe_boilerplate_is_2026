@@ -71,7 +71,7 @@ export function PantallaDevolucion({
   return (
     <div className="flex flex-col gap-6">
       {aviso && (
-        <p role="status" className="text-sm text-green-700 dark:text-green-400">
+        <p role="status" className="text-sm text-zinc-700 dark:text-zinc-300">
           {aviso}
         </p>
       )}

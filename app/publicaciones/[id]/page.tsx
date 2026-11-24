@@ -46,7 +46,7 @@ export default async function PublicacionPage(props: PageProps<"/publicaciones/[
         {nueva === "1" && (
           <p
             role="status"
-            className="mb-6 rounded-md border border-green-300 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
+            className="mb-6 rounded-md border border-zinc-200 bg-zinc-50 text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 p-3 text-sm"
           >
             Tu publicación quedó registrada y ya aparece en el catálogo.
           </p>

@@ -141,7 +141,7 @@ export function FormularioSolicitud({
       <div className="flex flex-col gap-4" data-testid="solicitud-enviada">
         <p
           role="status"
-          className="rounded-md border border-green-300 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
+          className="rounded-md border border-zinc-200 bg-zinc-50 text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 p-3 text-sm"
         >
           Enviamos tu solicitud al arrendador.
         </p>
@@ -182,7 +182,7 @@ export function FormularioSolicitud({
       {errorPeriodo && (
         <p
           role="alert"
-          className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200"
+          className="rounded-md border border-red-200 bg-transparent text-red-700 dark:border-red-900 dark:text-red-400 px-3 py-2 text-sm"
         >
           {errorPeriodo}
         </p>
@@ -203,7 +203,7 @@ export function FormularioSolicitud({
       {fallo?.tipo === "mensaje" && (
         <p
           role="alert"
-          className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200"
+          className="rounded-md border border-red-200 bg-transparent text-red-700 dark:border-red-900 dark:text-red-400 px-3 py-2 text-sm"
         >
           {fallo.mensaje}
         </p>

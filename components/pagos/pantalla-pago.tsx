@@ -73,7 +73,7 @@ export function PantallaPago({ reservaId, alquiler, deposito }: Props) {
       <p
         role="note"
         data-testid="aviso-pago-simulado"
-        className="rounded-md border border-sky-300 bg-sky-50 p-3 text-sm font-medium text-sky-900 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-100"
+        className="rounded-md border border-zinc-300 bg-zinc-50 p-3 text-sm font-medium text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
       >
         Pago simulado: no se realizará ningún cargo real.
       </p>
