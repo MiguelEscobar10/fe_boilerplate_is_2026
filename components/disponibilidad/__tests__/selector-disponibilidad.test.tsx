@@ -59,8 +59,8 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("SelectorDisponibilidad", () => {
-  it("distingue libres, ocupados, bloqueados y pasados, con leyenda", async () => {
+describe("H13. Ver la disponibilidad real de un bien (SelectorDisponibilidad)", () => {
+  it("AC1: distingue libres, ocupados, bloqueados y pasados, con leyenda", async () => {
     simularDisponibilidad(OCUPADOS);
 
     render(<SelectorDisponibilidad publicacionId={ID} />);
@@ -73,7 +73,7 @@ describe("SelectorDisponibilidad", () => {
     expect(screen.getByText("Bloqueado por el arrendador")).toBeInTheDocument();
   });
 
-  it("un día con solo solicitudes PENDIENTE se ve libre (el backend no lo manda)", async () => {
+  it("AC2: un día con solo solicitudes PENDIENTE se ve libre (el backend no lo manda)", async () => {
     simularDisponibilidad([]);
 
     render(<SelectorDisponibilidad publicacionId={ID} />);
@@ -81,7 +81,7 @@ describe("SelectorDisponibilidad", () => {
     await waitFor(() => expect(dia("20 nov 2026")).toHaveAttribute("data-estado", "libre"));
   });
 
-  it("pulsar un día pasado no lo elige y avisa «No se pueden elegir fechas pasadas.»", async () => {
+  it("AC3: pulsar un día pasado no lo elige y avisa «No se pueden elegir fechas pasadas.»", async () => {
     const user = userEvent.setup();
     simularDisponibilidad(OCUPADOS);
     render(<SelectorDisponibilidad publicacionId={ID} />);
@@ -94,7 +94,7 @@ describe("SelectorDisponibilidad", () => {
     expect(dia("10 nov 2026")).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("pulsar un día ocupado tampoco lo elige", async () => {
+  it("AC1: pulsar un día ocupado tampoco lo elige (negativo)", async () => {
     const user = userEvent.setup();
     simularDisponibilidad(OCUPADOS);
     render(<SelectorDisponibilidad publicacionId={ID} />);
@@ -123,7 +123,7 @@ describe("SelectorDisponibilidad", () => {
     expect(dia("22 nov 2026")).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("no deja elegir un período que incluya días ocupados", async () => {
+  it("AC1: no deja elegir un período que incluya días ocupados (negativo)", async () => {
     const user = userEvent.setup();
     simularDisponibilidad(OCUPADOS);
     const onPeriodoElegido = vi.fn();
