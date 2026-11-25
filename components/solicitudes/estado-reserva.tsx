@@ -1,11 +1,12 @@
 import type { EstadoReserva } from "@/lib/solicitudes/tipos";
 
+// Escala de grises: el estado lo dice el texto de la etiqueta, no el color.
 const ESTILO: Record<EstadoReserva, string> = {
-  PENDIENTE: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
-  CONFIRMADA: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200",
-  RECHAZADA: "bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-200",
-  CANCELADA: "bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200",
-  EN_CURSO: "bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-200",
+  PENDIENTE: "border border-zinc-400 text-zinc-800 dark:border-zinc-500 dark:text-zinc-200",
+  CONFIRMADA: "bg-foreground text-background",
+  RECHAZADA: "border border-zinc-300 text-zinc-500 line-through dark:border-zinc-700 dark:text-zinc-400",
+  CANCELADA: "border border-zinc-300 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400",
+  EN_CURSO: "bg-zinc-700 text-white dark:bg-zinc-300 dark:text-zinc-900",
   COMPLETADA: "bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200",
 };
 

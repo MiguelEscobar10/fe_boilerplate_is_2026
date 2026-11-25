@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { EnlacesReserva } from "@/components/navegacion/enlaces-reserva";
 import { notFound } from "next/navigation";
 import { SeccionCalificacion } from "@/components/calificaciones/seccion-calificacion";
 import { EstadoPago } from "@/components/pagos/estado-pago";
@@ -43,7 +44,7 @@ async function ContenidoReserva({ id }: { id: string }) {
         </p>
         <EstadoReserva estado={reserva.estado} numero={reserva.id} />
         {reserva.estado === "RECHAZADA" && reserva.motivoRechazo && (
-          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+          <p className="rounded-md border border-red-200 bg-transparent text-red-700 dark:border-red-900 dark:text-red-400 px-3 py-2 text-sm">
             Motivo del rechazo: {reserva.motivoRechazo}
           </p>
         )}
@@ -53,6 +54,7 @@ async function ContenidoReserva({ id }: { id: string }) {
           costo={reserva.costoAlquiler}
           deposito={reserva.depositoMonto}
         />
+        <EnlacesReserva reservaId={reserva.id} estado={reserva.estado} />
         {esArrendatario && <EstadoPago reservaId={reserva.id} />}
         {esArrendatario && reserva.estado === "COMPLETADA" && (
           <SeccionCalificacion reservaId={reserva.id} nombreBien={reserva.publicacion.nombre} />

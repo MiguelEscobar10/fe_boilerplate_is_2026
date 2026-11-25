@@ -156,8 +156,8 @@ export function BloqueoFechas({ publicacionId }: { publicacionId: string }) {
             role={aviso.tipo === "exito" ? "status" : "alert"}
             className={`rounded-md px-3 py-2 text-sm ${
               aviso.tipo === "exito"
-                ? "bg-emerald-50 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200"
-                : "bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200"
+                ? "border border-zinc-200 bg-zinc-50 text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
+                : "border border-red-200 bg-transparent text-red-700 dark:border-red-900 dark:text-red-400"
             }`}
           >
             <p>{aviso.mensaje}</p>
