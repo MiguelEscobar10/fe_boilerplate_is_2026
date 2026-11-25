@@ -14,6 +14,7 @@ import {
   formatearPeriodo,
 } from "@/lib/solicitudes/formato";
 import type { Decision, DecisionGuardada, Solicitud } from "@/lib/solicitudes/tipos";
+import { EnlacesReserva } from "@/components/navegacion/enlaces-reserva";
 import { ConfirmacionDecision } from "./confirmacion-decision";
 import { EstadoReservaBadge } from "./estado-reserva";
 
@@ -163,14 +164,16 @@ export function DetalleSolicitud({
         ))}
       </dl>
 
+      <EnlacesReserva reservaId={solicitud.id} estado={solicitud.estado} />
+
       {exito && (
-        <p role="status" className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+        <p role="status" className="rounded-md border border-zinc-200 bg-zinc-50 text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 px-3 py-2 text-sm">
           {exito}
         </p>
       )}
 
       {error && (
-        <div role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+        <div role="alert" className="rounded-md border border-red-200 bg-transparent text-red-700 dark:border-red-900 dark:text-red-400 px-3 py-2 text-sm">
           <p>{error.mensaje}</p>
           {error.detalle && <p className="mt-1 text-xs">{error.detalle}</p>}
         </div>

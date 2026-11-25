@@ -65,7 +65,7 @@ export function InterruptorRequiereVerificacion({ publicacionId, valorInicial }:
           disabled={guardando}
           onClick={cambiar}
           className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-60 ${
-            valor ? "bg-green-700" : "bg-zinc-300 dark:bg-zinc-700"
+            valor ? "bg-foreground" : "bg-zinc-300 dark:bg-zinc-700"
           }`}
         >
           <span className="sr-only">Requiere verificación de identidad</span>
@@ -89,7 +89,7 @@ export function InterruptorRequiereVerificacion({ publicacionId, valorInicial }:
         </p>
       )}
       {aviso && (
-        <p role="status" className="text-xs text-green-700 dark:text-green-400">
+        <p role="status" className="text-xs text-zinc-700 dark:text-zinc-300">
           {aviso}
         </p>
       )}

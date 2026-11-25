@@ -20,8 +20,8 @@ function formatearFecha(iso: string) {
 }
 
 const ESTILO = {
-  APROBADO: "border-green-300 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100",
-  RECHAZADO: "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100",
+  APROBADO: "border-zinc-300 bg-zinc-50 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100",
+  RECHAZADO: "border-zinc-300 bg-zinc-50 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100",
   PENDIENTE: "border-zinc-300 bg-zinc-50 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100",
 } as const;
 
@@ -89,7 +89,7 @@ export function EstadoPago({ reservaId }: { reservaId: string }) {
         <p
           role="alert"
           data-testid="error-pago"
-          className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200"
+          className="rounded-md border border-red-200 bg-transparent text-red-700 dark:border-red-900 dark:text-red-400 px-3 py-2 text-sm"
         >
           No se pudo consultar el estado del pago. Intenta de nuevo.
         </p>

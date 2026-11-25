@@ -202,7 +202,7 @@ function ItemSolicitud({ solicitud, onResuelta }: ItemProps) {
                 type="button"
                 disabled={enviando}
                 onClick={() => enviar("RECHAZAR")}
-                className="rounded-md bg-red-600 px-3 py-2 text-sm text-white disabled:opacity-60"
+                className="rounded-md border border-zinc-400 px-3 py-2 text-sm font-medium text-red-700 disabled:opacity-60 dark:border-zinc-600 dark:text-red-400"
               >
                 Confirmar rechazo
               </button>
@@ -222,7 +222,7 @@ function ItemSolicitud({ solicitud, onResuelta }: ItemProps) {
               type="button"
               disabled={enviando}
               onClick={() => enviar("APROBAR")}
-              className="rounded-md bg-green-700 px-3 py-2 text-sm text-white disabled:opacity-60"
+              className="rounded-md bg-foreground px-3 py-2 text-sm font-medium text-background disabled:opacity-60"
             >
               Aprobar
             </button>

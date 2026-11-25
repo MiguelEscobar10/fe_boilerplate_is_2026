@@ -73,7 +73,7 @@ export function ConfirmacionDecision({ decision, enviando, onConfirmar, onCancel
           className={`rounded-md px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-60 ${
             decision === "APROBAR"
               ? "bg-foreground text-background"
-              : "bg-red-600 text-white"
+              : "border border-zinc-400 text-red-700 dark:border-zinc-600 dark:text-red-400"
           }`}
         >
           {enviando

@@ -18,7 +18,7 @@ export function AvisoVerificacionRequerida({ mensaje }: Props) {
   return (
     <div
       role="alert"
-      className="flex flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+      className="flex flex-col gap-2 rounded-lg border border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
     >
       <p className="font-medium">No puedes solicitar esta publicación todavía</p>
       <p>{mensaje}</p>
